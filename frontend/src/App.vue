@@ -1,14 +1,10 @@
 <script setup>
-import Navbar from "./components/Navbar.vue";
-import joinClass from "./components/JoinClass.vue"; 
+
 import { RouterLink, RouterView } from 'vue-router';
 </script>
 
 <template>
 <div class="bg-black min-h-screen text-white">
-  <Navbar />
-  <joinClass />
-  
   <!-- Router View with transition effect -->
   <Transition name="fade" mode="out-in">
     <RouterView />
