@@ -7,7 +7,7 @@ export const useAuthStore = defineStore("auth", () => {
 
   const fetchUser = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/auth/user", { withCredentials: true });
+      const res = await axios.get("http://localhost:5001/auth/user", { withCredentials: true });
       user.value = res.data;
     } catch (error) {
       console.error("Error fetching user", error);
