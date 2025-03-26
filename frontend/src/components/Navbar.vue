@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from "vue";
+import axios from "axios";
 import modal from "./modal.vue";
 
 const username = ref("Guest User");
@@ -24,8 +25,25 @@ const logout = () => {
   alert("Logging out...");
 };
 
-const joinClass = () => {
-  alert("Joining class...");
+const joinClass = async () => {
+  if (!classCode.value.trim()) {
+    alert("Please enter a class code.");
+    return;
+  }
+
+  try {
+    const response = await axios.post("http://localhost:5000/api/join-class", {
+      classCode: classCode.value,
+    });
+
+    if (response.data) {
+      alert("Class joined successfully!");
+      joinedClasses.value.push(response.data.classData);
+      showModal.value = false; // Close modal after joining
+    }
+  } catch (error) {
+    alert(error.response?.data?.message || "Error joining class.");
+  }
 };
 </script>
 
@@ -160,7 +178,8 @@ const joinClass = () => {
 .neon-text {
   font-family: "Orbitron", sans-serif;
   background: linear-gradient(90deg, #ff00ff, #00ffff, #ff9900);
-  -webkit-background-clip: text;
+  background-clip: text; /* Standard */
+  -webkit-background-clip: text; /* Webkit for Safari/Chrome */
   -webkit-text-fill-color: transparent;
   text-shadow: 0 0 5px rgba(255, 0, 255, 0.8), 0 0 10px rgba(0, 255, 255, 0.8),
     0 0 20px rgba(255, 153, 0, 0.8), 0 0 40px rgba(255, 0, 255, 0.5);

@@ -1,5 +1,6 @@
 import express from "express";
 import User from "../models/User.js";
+import Class from "../models/class.js";
 import passport from "passport";
 
 const router = express.Router();
@@ -119,5 +120,54 @@ router.get("/logout", (req, res) => {
         });
     });
 });
+
+//Joining the class through code
+router.post("/join-class", async (req, res) => {
+    try {
+        const { studentId, classCode } = req.body;
+
+        // Check if class exists
+        const classData = await Class.findOne({ code: classCode });
+        if (!classData) {
+            return res.status(404).json({ message: "Invalid class code" });
+        }
+
+        // Check if student is already in the class
+        if (classData.students.includes(studentId)) {
+            return res.status(400).json({ message: "Already joined this class" });
+        }
+
+        // Add student to the class
+        classData.students.push(studentId);
+        await classData.save();
+
+        // Update student collection
+        await User.findByIdAndUpdate(studentId, { 
+            $push: { joinedClasses: classData._id }
+        });
+
+        res.status(200).json({ message: "Class joined successfully", classData });
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error });
+    }
+});
+
+//Displaying joined classes
+router.get("/api/joined-classes", async (req, res) => {
+    try {
+      const studentId = req.user.id; // Assuming authentication middleware extracts user ID
+      const student = await Student.findById(studentId).populate("joinedClasses");
+  
+      if (!student) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+  
+      res.json(student.joinedClasses);
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
+
 
 export default router;
