@@ -12,7 +12,7 @@ import landingView from '../views/LandingPage.vue';
 import AddDetail from '@/views/AddDetail.vue';
 import TeacherDashboard from '../views/teacher-dashboard.vue';
 import StudentDashboard from '../views/Student-dashboard.vue';
-
+import  profile from '../views/Profile.vue';
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -26,8 +26,12 @@ const router = createRouter({
     { path: '/submissions/:assignmentId', component: StudentSubmissions, props: true },
     { path: '/additional-details', name: 'signup', component: AddDetail },
     { path: '/student-dashboard', component: StudentDashboard, name: 'student-dashboard' },
-    { path: '/teacher-dashboard', component: TeacherDashboard, name: 'teacher-dashboard' }
+    { path: '/teacher-dashboard', component: TeacherDashboard, name: 'teacher-dashboard' },
+    { path: "/profile", component: profile },
+
   ]
 });
+
+
 
 export default router;

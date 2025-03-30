@@ -1,9 +1,46 @@
 <script setup>
-import { ref } from "vue";
+import { ref  ,onMounted } from "vue";
 import modal from "./modal.vue";
+import { RouterLink } from "vue-router";
+import { useRouter } from "vue-router";
+import axios from 'axios';
 
-const username = ref("Guest User");
-const email = ref("guest@example.com");
+const user =ref(null);
+const router = useRouter();;
+//PROFILE 
+const fetchProfile = async()=>{
+  try{
+    const{data}=await axios.get("http://localhost:5000/auth/profile" , {withCredentials:true,});
+    console.log("🔍 Profile Data:", data);
+
+    user.value=data;
+  }catch(error){
+    console.error("failed to fetch data", error);
+
+        // Debugging - check the actual error response
+        if (error.response) {
+      console.log("🔍 Error Response:", error.response.data);
+    }
+    router.push("/"); // 🔹 Redirect to login if unauthorized
+
+  }
+};
+
+//LOGOUT
+const logout=async()=>{
+  alert("Logging out...");
+try{
+  await axios.post("http://localhost:5000/auth/logout" , {} ,{withCredentials:true,});
+  router.push("/");
+}catch(error){
+  console.error("failed to logout", error);
+}
+};
+
+
+
+
+
 const profilePicture = ref("https://randomuser.me/api/portraits/women/45.jpg");
 const isDropdownOpen = ref(false);
 const isMobileMenuOpen = ref(false);
@@ -20,13 +57,14 @@ const toggleMobileMenu = () => {
   isMobileMenuOpen.value = !isMobileMenuOpen.value;
 };
 
-const logout = () => {
-  alert("Logging out...");
-};
+
 
 const joinClass = () => {
   alert("Joining class...");
 };
+
+onMounted(fetchProfile);
+
 </script>
 
 <template>
@@ -48,7 +86,7 @@ const joinClass = () => {
       </button>
 
       <!-- Profile Dropdown -->
-      <div class="relative">
+      <div v-if="user" class="relative">
         <button @click="toggleDropDown" class="flex items-center">
           <img
             :src="profilePicture"
@@ -63,16 +101,16 @@ const joinClass = () => {
           class="absolute right-0 mt-2 w-56 bg-gray-900 border border-gray-700 rounded-lg shadow-lg p-4 space-y-2"
         >
           <div class="border-b border-gray-700 pb-2">
-            <h2 class="text-lg font-semibold text-white">{{ username }}</h2>
-            <p class="text-sm text-gray-400">{{ email }}</p>
+            <h2 class="text-lg font-semibold text-white">{{ user.username }}</h2>
+            <p class="text-sm text-gray-400">{{ user.email }}</p>
           </div>
 
           <ul class="py-2">
             <li>
-              <a
-                href="#"
+              <router-link
+             to="/profile"
                 class="block px-4 py-2 text-gray-200 hover:bg-gray-700"
-                >Profile</a
+                >Profile</router-link
               >
             </li>
             <li>

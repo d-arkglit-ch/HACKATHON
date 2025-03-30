@@ -31,9 +31,15 @@ app.use(cors({
 app.use(express.json());
 app.use(
   session({
-    secret: "your_secret_key",
+  origin: "http://localhost:5173", 
+    secret: process.env.SESSION_SECRET||"your_secret_key",
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false,
+    cookie: {
+      secure: false,  // Set to `true` only if using HTTPS
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000, // 1 day
+    },
   })
 );
 app.use(passport.initialize());

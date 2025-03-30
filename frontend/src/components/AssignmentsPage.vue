@@ -35,7 +35,7 @@
   </template>
   
   <script>
-  import api from '../../../../classroom-system/src/api';
+  import api from '../api';
   
   export default {
     data() {

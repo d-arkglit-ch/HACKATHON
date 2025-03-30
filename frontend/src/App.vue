@@ -1,20 +1,11 @@
 <script setup>
 import { RouterLink, RouterView } from 'vue-router';
+
+
 </script>
 
 <template>
   <div class="bg-black min-h-screen text-white overflow-x-hidden">
-    <!-- Navigation Bar -->
-    <nav class="navbar">
-      <div class="nav-links">
-        <RouterLink to="/" class="nav-link" active-class="active-link">Home</RouterLink>
-        <RouterLink to="/classes" class="nav-link" active-class="active-link">Create Class</RouterLink>
-        <RouterLink to="/class-list" class="nav-link" active-class="active-link">Class List</RouterLink>
-        <RouterLink to="/upload-assignment/1" class="nav-link" active-class="active-link">Upload Assignment</RouterLink>
-        <RouterLink to="/feedback/1" class="nav-link" active-class="active-link">Feedback</RouterLink>
-        <RouterLink to="/submissions/1" class="nav-link" active-class="active-link">Submissions</RouterLink>
-      </div>
-    </nav>
 
     <!-- Page Content with transition effect -->
     <Transition name="fade" mode="out-in">
