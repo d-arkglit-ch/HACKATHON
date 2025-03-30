@@ -1,4 +1,9 @@
+<script setup>
+import AppNavbar from '@/components/AppNavbar.vue'; // Import Navbar
+</script>
+
 <template>
+  <AppNavbar/>
   <div class="min-h-screen bg-gray-900 text-gray-300 flex items-center justify-center p-6">
     <div class="w-full max-w-3xl bg-gray-800 p-8 rounded-lg shadow-xl">
       <h1 class="text-4xl font-bold text-center mb-6 text-blue-400">All Classes</h1>

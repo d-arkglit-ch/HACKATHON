@@ -1,4 +1,10 @@
+<script setup>
+import AppNavbar from '@/components/AppNavbar.vue'; // Import Navbar
+</script>
+
 <template>
+  <AppNavbar />
+  
   <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-black via-gray-900 to-gray-800 text-white">
     <div class="text-center animate-fade-in">
       <h1 class="text-5xl font-extrabold mb-4 text-blue-400">Welcome to Studify</h1>
