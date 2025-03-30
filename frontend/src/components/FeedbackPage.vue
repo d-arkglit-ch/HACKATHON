@@ -1,4 +1,9 @@
+<script setup>
+import AppNavbar from '@/components/AppNavbar.vue'; // Import Navbar
+</script>
+
 <template>
+  <app-navbar/>
   <div class="min-h-screen bg-black text-gray-300 flex items-center justify-center p-6">
     <div class="bg-gray-900 p-8 rounded-lg shadow-lg w-full max-w-lg">
       <h1 class="text-3xl font-bold text-center mb-6 text-blue-400">Provide Feedback</h1>
