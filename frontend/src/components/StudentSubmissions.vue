@@ -1,19 +1,40 @@
+<script setup>
+import AppNavbar from '@/components/AppNavbar.vue'; // Import Navbar
+</script>
+
 <template>
+  <AppNavbar/>
   <div class="min-h-screen bg-gray-900 text-gray-300 flex items-center justify-center p-6">
     <div class="w-full max-w-2xl bg-gray-800 p-8 rounded-lg shadow-lg">
       <h1 class="text-3xl font-bold text-center mb-6 text-blue-400">Assignment Submissions</h1>
 
-      <h2 class="text-xl font-semibold mb-4 text-gray-300">Previous Submissions</h2>
+      <!-- Class Selection -->
+      <div class="mb-6">
+        <label class="text-gray-300">Select Class:</label>
+        <select v-model="selectedClass" @change="fetchAssignments" class="input-field w-full">
+          <option v-for="cls in classes" :key="cls._id" :value="cls._id">{{ cls.name }}</option>
+        </select>
+      </div>
 
+      <!-- Assignment Selection -->
+      <div v-if="selectedClass" class="mb-6">
+        <label class="text-gray-300">Select Assignment:</label>
+        <select v-model="selectedAssignment" @change="fetchSubmissions" class="input-field w-full">
+          <option v-for="assignment in assignments" :key="assignment._id" :value="assignment._id">{{ assignment.title }}</option>
+        </select>
+      </div>
+
+      <h2 v-if="selectedAssignment" class="text-xl font-semibold mb-4 text-gray-300">Previous Submissions</h2>
+      
       <!-- Loading State -->
       <div v-if="loading" class="text-center text-gray-400">Loading submissions...</div>
-
+      
       <!-- Submissions List -->
       <ul v-else-if="submissions.length" class="space-y-4">
         <li 
           v-for="submission in submissions" 
           :key="submission._id" 
-          class="bg-gray-700 p-4 rounded-lg flex justify-between items-center shadow-md hover:bg-gray-600 transition"
+          class="bg-gray-700 p-4 rounded-lg shadow-md hover:bg-gray-600 transition"
         >
           <div>
             <strong class="text-white">{{ submission.studentName }}</strong>  
@@ -23,18 +44,13 @@
           </div>
 
           <div class="flex items-center space-x-3">
-            <button 
-              v-if="!submission.reviewed" 
-              @click="markReviewed(submission._id)" 
-              class="btn btn-success"
-            >
-              ✅ Mark as Reviewed
-            </button>
-            <span v-else class="badge-reviewed">✔ Reviewed</span>
+            <button @click="giveSelfFeedback(submission)" class="btn btn-primary">📝 Self Feedback</button>
+            <button @click="giveAIFeedback(submission)" class="btn btn-secondary">🤖 AI Feedback</button>
+            <span v-if="submission.reviewed" class="badge-reviewed">✔ Reviewed</span>
           </div>
         </li>
       </ul>
-
+      
       <!-- No Submissions Message -->
       <p v-else class="text-center text-gray-400">No submissions found for this assignment.</p>
     </div>
@@ -45,20 +61,42 @@
 import api from '../api';
 
 export default {
-  props: ['assignmentId'],
   data() {
     return { 
+      classes: [],
+      selectedClass: '',
+      assignments: [],
+      selectedAssignment: '',
       submissions: [],
-      loading: true 
+      loading: false
     };
   },
   async created() {
-    await this.fetchSubmissions();
+    await this.fetchClasses();
   },
   methods: {
-    async fetchSubmissions() {
+    async fetchClasses() {
       try {
-        const response = await api.get(`/submissions/${this.assignmentId}`);
+        const response = await api.get('/classes');
+        this.classes = response.data;
+      } catch (error) {
+        console.error('❌ Error fetching classes:', error);
+      }
+    },
+    async fetchAssignments() {
+      if (!this.selectedClass) return;
+      try {
+        const response = await api.get(`/assignments/${this.selectedClass}`);
+        this.assignments = response.data;
+      } catch (error) {
+        console.error('❌ Error fetching assignments:', error);
+      }
+    },
+    async fetchSubmissions() {
+      if (!this.selectedAssignment) return;
+      this.loading = true;
+      try {
+        const response = await api.get(`/submissions/${this.selectedAssignment}`);
         this.submissions = response.data;
       } catch (error) {
         console.error('❌ Error fetching submissions:', error);
@@ -67,16 +105,31 @@ export default {
         this.loading = false;
       }
     },
-    async markReviewed(submissionId) {
+    giveSelfFeedback(submission) {
+      const feedback = prompt("Enter your feedback:", submission.feedback || "");
+      if (feedback !== null) {
+        this.submitFeedback(submission._id, feedback);
+      }
+    },
+    async giveAIFeedback(submission) {
       try {
-        await api.put(`/submissions/review/${submissionId}`);
-        this.submissions = this.submissions.map(submission => 
-          submission._id === submissionId ? { ...submission, reviewed: true } : submission
-        );
-        alert('✅ Submission marked as reviewed!');
+        const response = await api.post(`/ai-feedback/${submission._id}`);
+        this.submitFeedback(submission._id, response.data.feedback);
       } catch (error) {
-        console.error('❌ Error marking submission as reviewed:', error);
-        alert('Failed to mark as reviewed. Please try again.');
+        console.error('❌ Error generating AI feedback:', error);
+        alert('AI feedback generation failed. Try again later.');
+      }
+    },
+    async submitFeedback(submissionId, feedback) {
+      try {
+        await api.put(`/submissions/feedback/${submissionId}`, { feedback });
+        this.submissions = this.submissions.map(sub => 
+          sub._id === submissionId ? { ...sub, feedback, reviewed: true } : sub
+        );
+        alert('✅ Feedback submitted successfully!');
+      } catch (error) {
+        console.error('❌ Error submitting feedback:', error);
+        alert('Failed to submit feedback. Please try again.');
       }
     }
   }
@@ -86,7 +139,7 @@ export default {
 <style scoped>
 /* Buttons */
 .btn {
-  padding: 8px 16px;
+  padding: 8px 12px;
   font-size: 0.9rem;
   font-weight: bold;
   border-radius: 6px;
@@ -98,13 +151,17 @@ export default {
   text-align: center;
 }
 
-.btn-success {
-  background: linear-gradient(to right, #059669, #065f46);
+.btn-primary {
+  background: linear-gradient(to right, #3b82f6, #1e3a8a);
   color: white;
 }
 
-.btn-success:hover {
-  background: linear-gradient(to right, #047857, #064e3b);
+.btn-secondary {
+  background: linear-gradient(to right, #9333ea, #5b21b6);
+  color: white;
+}
+
+.btn-primary:hover, .btn-secondary:hover {
   transform: scale(1.05);
 }
 
@@ -117,15 +174,5 @@ export default {
   color: white;
   text-transform: uppercase;
   font-size: 0.85rem;
-}
-
-/* Submission List Item */
-.bg-gray-700 {
-  transition: background 0.3s, transform 0.2s ease-in-out;
-}
-
-.bg-gray-700:hover {
-  background: #4b5563;
-  transform: scale(1.02);
 }
 </style>
