@@ -1,5 +1,5 @@
 <script setup>
-import { ref, defineProps, onMounted } from "vue";
+import { defineProps } from "vue";
 import axios from "axios";
 
 const props = defineProps({
@@ -17,21 +17,6 @@ const props = defineProps({
     ],
   },
 });
-
-const joinedClasses = ref([]);
-const hasJoined = ref(false);
-
-const fetchJoinedClasses = async () => {
-  try {
-    const response = await axios.get("http://localhost:5000/api/joined-classes");
-    joinedClasses.value = response.data;
-    hasJoined.value = joinedClasses.value.length > 0;
-  } catch (error) {
-    console.error("Error fetching joined classes:", error);
-  }
-};
-
-onMounted(fetchJoinedClasses);
 </script>
 
 <template>
@@ -40,7 +25,7 @@ onMounted(fetchJoinedClasses);
       {{ props.title }}
     </h1>
     
-    <div  v-if="!hasJoined" class="w-full max-w-3xl">
+    <div class="w-full max-w-3xl">
       <h2 class="text-xl font-semibold mb-4">How to Join</h2>
       <ul class="space-y-4">
         <li v-for="(step, index) in props.steps" :key="index" 
@@ -51,16 +36,6 @@ onMounted(fetchJoinedClasses);
             {{ index + 1 }}
           </span>
           <p class="text-lg text-white">{{ step }}</p>
-        </li>
-      </ul>
-    </div>
-
-    <div v-else class="w-full max-w-3xl">
-      <h2 class="text-xl font-semibold mb-4">Your Joined Classes</h2>
-      <ul class="space-y-4">
-        <li v-for="classItem in joinedClasses" :key="classItem._id" 
-            class="flex items-center bg-gray-800 p-4 rounded-xl shadow-md">
-          <span class="text-lg font-semibold">{{ classItem.name }}</span>
         </li>
       </ul>
     </div>

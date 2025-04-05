@@ -1,7 +1,10 @@
 <script setup>
 import { ref } from "vue";
 import axios from "axios";
+import { useRouter } from "vue-router";
 import modal from "./modal.vue";
+
+const router = useRouter();
 
 const username = ref("Guest User");
 const email = ref("guest@example.com");
@@ -10,6 +13,7 @@ const isDropdownOpen = ref(false);
 const isMobileMenuOpen = ref(false);
 const showModal = ref(false);
 const classCode = ref("");
+const studentEmail = ref(""); 
 const joinedClasses = ref([]);
 
 
@@ -32,17 +36,22 @@ const joinClass = async () => {
   }
 
   try {
-    const response = await axios.post("http://localhost:5000/api/join-class", {
+    const response = await axios.post("http://localhost:5000/class/join-class", {
       classCode: classCode.value,
+      studentEmail: studentEmail.value,
     });
 
     if (response.data) {
       alert("Class joined successfully!");
       joinedClasses.value.push(response.data.classData);
+      console.log(joinedClasses.value);
       showModal.value = false; // Close modal after joining
+
+      router.push({ name: 'JoinedSubjects' });
     }
   } catch (error) {
-    alert(error.response?.data?.message || "Error joining class.");
+    console.log(error);
+   alert(error.response?.data?.message || "Error joining class.");
   }
 };
 </script>
@@ -166,6 +175,11 @@ const joinClass = async () => {
         <input
           v-model="classCode"
           placeholder="Enter class code"
+          class="input-field"
+        />
+        <input
+          v-model="studentEmail"
+          placeholder="Enter your gmail"
           class="input-field"
         />
       </template>

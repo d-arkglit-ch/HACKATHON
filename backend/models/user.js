@@ -5,7 +5,20 @@ const UserSchema = new mongoose.Schema({
   username: { type: String, },
   email: { type: String, required: true, unique: true },
   role: { type: String, enum: ["Teacher", "Student"],  default: null },
-}, { discriminatorKey:"role", timestamps: true });
+
+  //Store only relevant fields
+  classesJoined: { 
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Class" }], 
+    default: undefined // Only stored for students
+  },
+  classCreated: { 
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Class" }], 
+    default: undefined // Only stored for teachers
+  }
+},
+{ timestamps: true 
+}
+);
 
 export default mongoose.model("User", UserSchema);
 
