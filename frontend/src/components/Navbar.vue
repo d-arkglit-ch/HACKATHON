@@ -6,7 +6,7 @@ import { useRouter } from "vue-router";
 import axios from 'axios';
 
 const user =ref(null);
-const router = useRouter();;
+const router = useRouter();
 //PROFILE 
 const fetchProfile = async()=>{
   try{
