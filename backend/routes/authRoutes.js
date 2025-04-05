@@ -1,7 +1,6 @@
 import express from "express";
 import User from "../models/User.js";
 import passport from "passport";
-
 const router = express.Router();
 
 // Google OAuth Sign-Up
@@ -109,15 +108,60 @@ router.post("/set-role", async (req, res) => {
     }
 });
 
-// Logout
-router.get("/logout", (req, res) => {
-    req.logout((err) => {
-        if (err) return res.status(500).json({ error: "Logout failed" });
+const isAuthenticated = (req, res, next) => {
+    if (req.isAuthenticated()) return next();
+    return res.status(401).json({ error: "Unauthorized. Please log in." });
+  };
 
-        req.session.destroy(() => {
-            res.redirect("http://localhost:5173/");
-        });
+//profile rooute
+
+  router.get("/profile"  ,isAuthenticated,(req, res)=>{
+    res.json({
+        username:req.user.username,
+        email:req.user.email ,
+        role:req.user.role,
     });
+    });
+
+// Logout
+router.post("/logout", (req, res) => {
+    req.logout((err) => {
+      if (err) {
+        console.error("❌ Logout error:", err);
+        return res.status(500).json({ error: "Logout failed" });
+      }
+  
+      req.session.destroy((err) => {
+        if (err) {
+          console.error("❌ Session destruction error:", err);
+          return res.status(500).json({ error: "Session destruction failed" });
+        }
+  
+        res.clearCookie("connect.sid"); // Remove session cookie
+        res.json({ message: "✅ Successfully logged out!" });
+      });
+    });
+  });
+
+
+
+
+
+
+router.get('/google/callback', async (req, res) => {
+    try {
+        const user = { 
+            name: req.user.displayName, 
+            email: req.user.emails[0].value, 
+            role: req.user.role, // Example: Assign role dynamically
+        };
+
+        req.session.user = user; // Store user in session
+
+        res.redirect('/dashboard'); // Redirect after login
+    } catch (error) {
+        res.status(500).json({ error: "Google Auth Failed" });
+    }
 });
 
 export default router;
