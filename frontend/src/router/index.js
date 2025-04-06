@@ -6,7 +6,7 @@ import CreateClass from '@/components/CreateClass.vue';
 import ClassList from '@/components/ClassList.vue';
 import UploadAssignment from '@/components/UploadAssignment.vue';
 import AssignmentsPage from '@/components/AssignmentsPage.vue';
-import FeedbackPage from '@/components/FeedbackPage.vue';
+//import FeedbackPage from '@/components/FeedbackPage.vue';
 import StudentSubmissions from '@/components/StudentSubmissions.vue';
 import LandingView from '@/views/LandingPage.vue';
 import AddDetail from '@/views/AddDetail.vue';
@@ -25,7 +25,7 @@ const router = createRouter({
     { path: '/class-list', name: 'class-list', component: ClassList },
     { path: '/assignments/:classId', name: 'assignments', component: AssignmentsPage, props: true },
     { path: '/upload-assignment/:classId', name: 'upload-assignment', component: UploadAssignment, props: true },
-    { path: '/feedback/:submissionId', name: 'feedback', component: FeedbackPage, props: true },
+   // { path: '/feedback/:submissionId', name: 'feedback', component: FeedbackPage, props: true },
     { path: '/submissions/:assignmentId', name: 'submissions', component: StudentSubmissions, props: true },
     { path: '/additional-details', name: 'signup', component: AddDetail },
     { path: '/student-dashboard', component: StudentDashboard, name: 'student-dashboard' },

@@ -17,7 +17,7 @@ const submitDetail = async () => {
   }
 
   try {
-    const response = await fetch("http://localhost:5000/auth/set-role", {
+    const response = await fetch("http://localhost:5001/auth/set-role", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

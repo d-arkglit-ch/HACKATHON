@@ -70,7 +70,7 @@ export default {
   methods: {
     async fetchClasses() {
       try {
-        const res = await axios.get('http://localhost:5000/api/classes');
+        const res = await axios.get('http://localhost:5001/api/classes');
         this.classes = res.data;
       } catch (error) {
         console.error('❌ Error fetching classes:', error);
@@ -79,7 +79,7 @@ export default {
     async fetchAssignments() {
       if (!this.selectedClassId) return;
       try {
-        const res = await axios.get(`http://localhost:5000/api/assignments/${this.selectedClassId}`);
+        const res = await axios.get(`http://localhost:5001/api/assignments/${this.selectedClassId}`);
         this.assignments = res.data.newAssignments.concat(res.data.oldAssignments);
       } catch (error) {
         console.error('❌ Error fetching assignments:', error);
@@ -98,13 +98,13 @@ export default {
         // ✅ Upload the file first
         const formData = new FormData();
         formData.append('file', this.file);
-        const uploadRes = await axios.post('http://localhost:5000/api/upload', formData, {
+        const uploadRes = await axios.post('http://localhost:5001/api/upload', formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
         const uploadedFileUrl = uploadRes.data.fileUrl;
 
         // ✅ Now create the assignment
-        const res = await axios.post('http://localhost:5000/api/assignments', {
+        const res = await axios.post('http://localhost:5001/api/assignments', {
           classId: this.selectedClassId,
           title: this.title,
           description: this.description,

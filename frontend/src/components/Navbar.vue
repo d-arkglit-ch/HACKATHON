@@ -4,15 +4,14 @@ import axios from "axios";
 import { useRouter } from "vue-router";
 import modal from "./modal.vue";
 import { RouterLink } from "vue-router";
-import { useRouter } from "vue-router";
-import axios from 'axios';
+
 
 const user =ref(null);
-const router = useRouter();;
+const router = useRouter();
 //PROFILE 
 const fetchProfile = async()=>{
   try{
-    const{data}=await axios.get("http://localhost:5000/auth/profile" , {withCredentials:true,});
+    const{data}=await axios.get("http://localhost:5001/auth/profile" , {withCredentials:true,});
     console.log("🔍 Profile Data:", data);
 
     user.value=data;
@@ -32,7 +31,7 @@ const fetchProfile = async()=>{
 const logout=async()=>{
   alert("Logging out...");
 try{
-  await axios.post("http://localhost:5000/auth/logout" , {} ,{withCredentials:true,});
+  await axios.post("http://localhost:5001/auth/logout" , {} ,{withCredentials:true,});
   router.push("/");
 }catch(error){
   console.error("failed to logout", error);
@@ -69,7 +68,7 @@ const joinClass = async () => {
   }
 
   try {
-    const response = await axios.post("http://localhost:5000/class/join-class", {
+    const response = await axios.post("http://localhost:5001/class/join-class", {
       classCode: classCode.value,
       studentEmail: studentEmail.value,
     });
