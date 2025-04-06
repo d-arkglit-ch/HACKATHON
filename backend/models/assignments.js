@@ -12,5 +12,6 @@ const AssignmentSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+const Assignment = mongoose.models.Assignment || mongoose.model('Assignment', AssignmentSchema);
+export default Assignment;
 
-export default mongoose.model("Assignment", AssignmentSchema);
