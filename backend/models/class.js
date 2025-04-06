@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 const ClassSchema = new mongoose.Schema({
   name: { type: String, required: true },
   subject: { type: String },
+  department: { type: String },  // Added department field
   semester: { type: String }, 
   code: { type: String, unique: true, required: true },
   teacherId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
