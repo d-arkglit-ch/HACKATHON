@@ -15,6 +15,11 @@ const SubmissionSchema = new mongoose.Schema({
   ]
 }, { timestamps: true });
 
+<<<<<<< HEAD
 const Submission = mongoose.models.Submission || mongoose.model('Submission', SubmissionSchema);
 export default Submission;
+=======
+// ✅ Prevent model overwrite
+export default mongoose.models.Submission || mongoose.model("Submission", SubmissionSchema);
+>>>>>>> c4b88e2157735ee558c348907e1355d35714a700
 

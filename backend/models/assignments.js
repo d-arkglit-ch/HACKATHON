@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 
+<<<<<<< HEAD
 const AssignmentSchema = new mongoose.Schema(
   {
     title: { type: String, required: true },
@@ -15,3 +16,15 @@ const AssignmentSchema = new mongoose.Schema(
 const Assignment = mongoose.models.Assignment || mongoose.model('Assignment', AssignmentSchema);
 export default Assignment;
 
+=======
+const assignmentSchema = new mongoose.Schema({
+  classId: { type: mongoose.Schema.Types.ObjectId, ref: "Class" },
+  title: String,
+  description: String,
+  fileUrl: String,
+  dueDate: Date,
+  teacherId: { type: mongoose.Schema.Types.ObjectId, ref: "Teacher" },
+}, { timestamps: true });
+
+export default mongoose.model("Assignment", assignmentSchema);
+>>>>>>> c4b88e2157735ee558c348907e1355d35714a700

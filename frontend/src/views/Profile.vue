@@ -10,7 +10,7 @@ const router = useRouter();
 
 const fetchProfile = async()=>{
   try{
-    const{data}=await axios.get("http://localhost:5000/auth/profile" , {withCredentials:true,});
+    const{data}=await axios.get("http://localhost:5001/auth/profile" , {withCredentials:true,});
     console.log("🔍 Profile Data:", data);
 
     user.value=data;
@@ -29,7 +29,7 @@ const fetchProfile = async()=>{
 
 const logout=async()=>{
 try{
-  await axios.post("http://localhost:5000/auth/logout" , {} ,{withCredentials:true,});
+  await axios.post("http://localhost:5001/auth/logout" , {} ,{withCredentials:true,});
   router.push("/");
 }catch(error){
   console.error("failed to logout", error);
