@@ -33,16 +33,25 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // ✅ Create a New Class
+// ✅ Create a New Class (Updated with subject & semester)
 router.post("/classes", async (req, res) => {
   try {
-    const { name } = req.body;
-    const newClass = new Class({ name, code: uuidv4() });
+    const { name, subject, semester } = req.body;
+
+    const newClass = new Class({
+      name,
+      subject,
+      semester,
+      code: uuidv4()
+    });
+
     await newClass.save();
     res.status(201).json(newClass);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
+
 
 // ✅ Get All Classes
 router.get("/classes", async (req, res) => {
