@@ -70,7 +70,7 @@ export default {
   methods: {
     async fetchClasses() {
       try {
-        const res = await axios.get('http://localhost:5000/api/classes');
+        const res = await axios.get('http://localhost:5001/api/classes');
         this.classes = res.data;
       } catch (error) {
         console.error('❌ Error fetching classes:', error);
@@ -79,7 +79,7 @@ export default {
     async fetchAssignments() {
       if (!this.selectedClassId) return;
       try {
-        const res = await axios.get(`http://localhost:5000/api/assignments/${this.selectedClassId}`);
+        const res = await axios.get(`http://localhost:5001/api/assignments/${this.selectedClassId}`);
         this.assignments = res.data.newAssignments.concat(res.data.oldAssignments);
       } catch (error) {
         console.error('❌ Error fetching assignments:', error);
@@ -88,47 +88,46 @@ export default {
     handleFileUpload(event) {
       this.file = event.target.files[0];
     },
+
+
+    
     async uploadAssignment() {
       if (!this.selectedClassId || !this.file) {
-        alert('⚠ Please select a class and upload a file.');
-        return;
-      }
-      this.loading = true;
-      try {
-        // ✅ Upload the file first
-        const formData = new FormData();
-        formData.append('file', this.file);
-        const uploadRes = await axios.post('http://localhost:5000/api/upload', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
-        const uploadedFileUrl = uploadRes.data.fileUrl;
+    alert('⚠ Please select a class and upload a file.');
+    return;
+  }
+  this.loading = true;
+  try {
+    const formData = new FormData();
+    formData.append('file', this.file);
+    formData.append('classId', this.selectedClassId);
+    formData.append('title', this.title);
+    formData.append('description', this.description);
+    formData.append('dueDate', this.dueDate);
 
-        // ✅ Now create the assignment
-        const res = await axios.post('http://localhost:5000/api/assignments', {
-          classId: this.selectedClassId,
-          title: this.title,
-          description: this.description,
-          fileUrl: uploadedFileUrl,
-          dueDate: this.dueDate,
-        });
+    const res = await axios.post('http://localhost:5001/api/assignments', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
 
-        this.assignments.push(res.data);
-        this.title = this.description = this.dueDate = '';
-        this.file = null;
-        this.successMessage = '✅ Assignment uploaded successfully!';
-        setTimeout(() => this.successMessage = '', 3000);
-        this.fetchAssignments();
-      } catch (error) {
-        console.error('❌ Error uploading assignment:', error);
-      } finally {
-        this.loading = false;
-      }
+    this.assignments.push(res.data);
+    this.title = this.description = this.dueDate = '';
+    this.file = null;
+    this.successMessage = '✅ Assignment uploaded successfully!';
+    setTimeout(() => this.successMessage = '', 3000);
+    this.fetchAssignments();
+  } catch (error) {
+    console.error('❌ Error uploading assignment:', error);
+  } finally {
+    this.loading = false;
+  }
+
     }
   },
   mounted() {
     this.fetchClasses();
   }
 };
+
 </script>
 
 <style scoped>

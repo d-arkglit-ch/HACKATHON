@@ -3,12 +3,12 @@ import { RouterLink } from 'vue-router';
 
   
    const  logIn=()=> {
-      window.location.href = "http://localhost:5000/auth/google/login"; // Calls backend login route
+      window.location.href = "http://localhost:5001/auth/google/login"; // Calls backend login route
     };
 
 
    const  signUp=() =>{
-      window.location.href = "http://localhost:5000/auth/google/signup";
+      window.location.href = "http://localhost:5001/auth/google/signup";
     };
   
 

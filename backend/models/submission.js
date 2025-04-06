@@ -13,7 +13,7 @@ const SubmissionSchema = new mongoose.Schema({
       score: { type: Number, min: 0, max: 100 }
     }
   ]
-}, { timestamps: true });
+}, { timestamps: true }); 
 
 const Submission = mongoose.models.Submission || mongoose.model('Submission', SubmissionSchema);
 export default Submission;
