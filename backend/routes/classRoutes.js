@@ -50,4 +50,51 @@ router.post("/join-class", async (req, res) => {
       res.status(500).json({ message: "Server error", error });
     }
 });
+
+// Fetch all classes a student has joined
+router.get("/joined-classes/:email", async (req, res) => {
+  try {
+    const { email } = req.params;
+
+    const student = await User.findOne({ email, role: "Student" }).populate("classesJoined");
+//     const student = await User.findOne({ email, role: "Student" })
+//     .populate({
+//     path: "classesJoined",
+//     populate: { path: "teacherId", select: "name email" }, // populate teacherId with name and email
+//   });
+
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    res.status(200).json(student.classesJoined);
+  } catch (error) {
+    console.log("Error fetching joined classes:", error);
+    res.status(500).json({ message: "Server error", error });
+  }
+});
+
+// GET /assignments/:classId
+router.get("/:classId", async (req, res) => {
+    try {
+      const { classId } = req.params;
+  
+      // Find the class and populate its assignments
+      const foundClass = await Class.findById(classId).populate("assignments");
+  
+      if (!foundClass) {
+        return res.status(404).json({ message: "Class not found" });
+      }
+  
+      res.status(200).json({
+        className: foundClass.name,
+        subject: foundClass.subject,
+        assignments: foundClass.assignments,
+      });
+    } catch (err) {
+      console.error("Error fetching assignments for class:", err);
+      res.status(500).json({ message: "Server Error" });
+    }
+  });
+  
 export default router;

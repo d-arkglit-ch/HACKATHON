@@ -26,6 +26,65 @@ router.get("/google/login", (req, res, next) => {
 });
 
 // Google OAuth Callback
+// router.get(
+//     "/google/callback",
+//     passport.authenticate("google", { failureRedirect: "/" }),
+//     async (req, res) => {
+//         try {
+//             console.log("✅ Full Google OAuth Response:", req.user);
+
+//             if (!req.user || !req.user.email) {
+//                 console.error("❌ Google OAuth did not return an email.");
+//                 return res.redirect("http://localhost:5173/?error=email_not_provided");
+//             }
+
+//             const { googleId, name, email } = req.user;
+//             console.log(`✅ Extracted Email: ${email}`);
+
+//             // Get stored flow from session
+//             const flow = req.session.oauthFlow || "login";
+//             console.log("✅ Google OAuth Callback Triggered! Flow Type:", flow);
+
+//             let user = await User.findOne({ googleId });
+
+//             if (!user) {
+//                 if (flow === "login") {
+//                     console.log("❌ User not found in login flow. Redirecting to home.");
+//                     return res.redirect("http://localhost:5173/?error=not_registered");
+//                 }
+
+//                 // Create a new user without role for sign-up flow
+//                 user = new User({
+//                     googleId,
+//                     username: name,
+//                     email,
+//                     role: null,
+//                 });
+
+//                 await user.save();
+//                 console.log("🆕 New user created, redirecting to additional details page.");
+//                 return res.redirect(`http://localhost:5173/additional-details?googleId=${googleId}`);
+//             }
+
+//             if (!user.role) {
+//                 console.log("🔄 Existing user without role, redirecting to additional details page.");
+//                 return res.redirect(`http://localhost:5173/additional-details?googleId=${googleId}`);
+//             }
+
+//             const dashboard =
+//                 user.role === "Teacher"
+//                     ? "http://localhost:5173/teacher-dashboard"
+//                     : "http://localhost:5173/student-dashboard";
+
+//             res.redirect(dashboard);
+//         } catch (error) {
+//             console.error("🚨 OAuth Error:", error);
+//             res.redirect("http://localhost:5173/");
+//         }
+//     }
+// );
+
+// Google OAuth Callback
 router.get(
     "/google/callback",
     passport.authenticate("google", { failureRedirect: "/" }),
@@ -39,11 +98,7 @@ router.get(
             }
 
             const { googleId, name, email } = req.user;
-            console.log(`✅ Extracted Email: ${email}`);
-
-            // Get stored flow from session
             const flow = req.session.oauthFlow || "login";
-            console.log("✅ Google OAuth Callback Triggered! Flow Type:", flow);
 
             let user = await User.findOne({ googleId });
 
@@ -53,7 +108,7 @@ router.get(
                     return res.redirect("http://localhost:5173/?error=not_registered");
                 }
 
-                // Create a new user without role for sign-up flow
+                // New user signup
                 user = new User({
                     googleId,
                     username: name,
@@ -62,27 +117,45 @@ router.get(
                 });
 
                 await user.save();
-                console.log("🆕 New user created, redirecting to additional details page.");
                 return res.redirect(`http://localhost:5173/additional-details?googleId=${googleId}`);
             }
 
             if (!user.role) {
-                console.log("🔄 Existing user without role, redirecting to additional details page.");
                 return res.redirect(`http://localhost:5173/additional-details?googleId=${googleId}`);
             }
 
-            const dashboard =
-                user.role === "Teacher"
-                    ? "http://localhost:5173/teacher-dashboard"
-                    : "http://localhost:5173/student-dashboard";
+            // ✅ New Logic for Students
+            if (user.role === "Student") {
+                console.log("🔍 Checking if student has joined any classes...");
+            
+                const populatedUser = await User.findById(user._id).populate("classesJoined");
+            
+                console.log("📦 Populated User:", populatedUser);
+            
+                const hasJoinedClass = populatedUser.classesJoined && populatedUser.classesJoined.length > 0;
+                console.log("📌 Has Joined Class?", hasJoinedClass);
+            
+                const studentRedirect = hasJoinedClass
+                    ? "http://localhost:5173/student-dashboard"
+                    : "http://localhost:5173/student-new";
+            
+                return res.redirect(studentRedirect);
+            }
+            
+            // For Teacher
+            if (user.role === "Teacher") {
+                return res.redirect("http://localhost:5173/teacher-dashboard");
+            }
 
-            res.redirect(dashboard);
+            // Default fallback
+            res.redirect("http://localhost:5173/");
         } catch (error) {
             console.error("🚨 OAuth Error:", error);
             res.redirect("http://localhost:5173/");
         }
     }
 );
+
 
 // Set User Role After Sign-Up
 router.post("/set-role", async (req, res) => {

@@ -4,53 +4,56 @@ import axios from "axios";
 import { useRouter } from "vue-router";
 import modal from "./modal.vue";
 import { RouterLink } from "vue-router";
-import { useRouter } from "vue-router";
-import axios from 'axios';
 
-const user =ref(null);
-const router = useRouter();;
-//PROFILE 
-const fetchProfile = async()=>{
-  try{
-    const{data}=await axios.get("http://localhost:5000/auth/profile" , {withCredentials:true,});
+const user = ref(null);
+const router = useRouter();
+//PROFILE
+const fetchProfile = async () => {
+  try {
+    const { data } = await axios.get("http://localhost:5000/auth/profile", {
+      withCredentials: true,
+    });
     console.log("🔍 Profile Data:", data);
 
-    user.value=data;
-  }catch(error){
+    user.value = data;
+    console.log(user.value);
+    if (user.value.role === "Student") {
+      localStorage.setItem("studentEmail", user.value.email); // ✅ Save it here
+      console.log("Email got stored in localSorage", user.value.email);
+    }
+  } catch (error) {
     console.error("failed to fetch data", error);
 
-        // Debugging - check the actual error response
-        if (error.response) {
+    // Debugging - check the actual error response
+    if (error.response) {
       console.log("🔍 Error Response:", error.response.data);
     }
     router.push("/"); // 🔹 Redirect to login if unauthorized
-
   }
 };
 
 //LOGOUT
-const logout=async()=>{
+const logout = async () => {
   alert("Logging out...");
-try{
-  await axios.post("http://localhost:5000/auth/logout" , {} ,{withCredentials:true,});
-  router.push("/");
-}catch(error){
-  console.error("failed to logout", error);
-}
+  try {
+    await axios.post(
+      "http://localhost:5000/auth/logout",
+      {},
+      { withCredentials: true }
+    );
+    router.push("/");
+  } catch (error) {
+    console.error("failed to logout", error);
+  }
 };
-
-
-
-
 
 const profilePicture = ref("https://randomuser.me/api/portraits/women/45.jpg");
 const isDropdownOpen = ref(false);
 const isMobileMenuOpen = ref(false);
 const showModal = ref(false);
 const classCode = ref("");
-const studentEmail = ref(""); 
+const studentEmail = ref("");
 const joinedClasses = ref([]);
-
 
 const toggleDropDown = () => {
   isDropdownOpen.value = !isDropdownOpen.value;
@@ -60,8 +63,6 @@ const toggleMobileMenu = () => {
   isMobileMenuOpen.value = !isMobileMenuOpen.value;
 };
 
-
-
 const joinClass = async () => {
   if (!classCode.value.trim()) {
     alert("Please enter a class code.");
@@ -69,27 +70,28 @@ const joinClass = async () => {
   }
 
   try {
-    const response = await axios.post("http://localhost:5000/class/join-class", {
-      classCode: classCode.value,
-      studentEmail: studentEmail.value,
-    });
+    const response = await axios.post(
+      "http://localhost:5000/class/join-class",
+      {
+        classCode: classCode.value,
+        studentEmail: studentEmail.value,
+      }
+    );
 
     if (response.data) {
       alert("Class joined successfully!");
-      joinedClasses.value.push(response.data.classData);
-      console.log(joinedClasses.value);
+
       showModal.value = false; // Close modal after joining
 
-      router.push({ name: 'JoinedSubjects' });
+      router.push({ name: "JoinedSubjects" });
     }
   } catch (error) {
     console.log(error);
-   alert(error.response?.data?.message || "Error joining class.");
+    alert(error.response?.data?.message || "Error joining class.");
   }
 };
 
 onMounted(fetchProfile);
-
 </script>
 
 <template>
@@ -104,7 +106,7 @@ onMounted(fetchProfile);
     <!-- Desktop Navigation -->
     <div class="hidden md:flex items-center space-x-6">
       <button
-        @click="showModal = true;"
+        @click="showModal = true"
         class="relative px-6 py-2 text-white font-semibold rounded-lg transition-all bg-gradient-to-r from-purple-500 via-blue-500 to-pink-500 hover:scale-105 hover:shadow-[0px_0px_15px_rgba(255,255,255,0.8)] before:absolute before:inset-0 before:bg-white before:opacity-10 before:rounded-lg before:blur-md overflow-hidden animate-pulse"
       >
         Join Class
@@ -126,14 +128,16 @@ onMounted(fetchProfile);
           class="absolute right-0 mt-2 w-56 bg-gray-900 border border-gray-700 rounded-lg shadow-lg p-4 space-y-2"
         >
           <div class="border-b border-gray-700 pb-2">
-            <h2 class="text-lg font-semibold text-white">{{ user.username }}</h2>
+            <h2 class="text-lg font-semibold text-white">
+              {{ user.username }}
+            </h2>
             <p class="text-sm text-gray-400">{{ user.email }}</p>
           </div>
 
           <ul class="py-2">
             <li>
               <router-link
-             to="/profile"
+                to="/profile"
                 class="block px-4 py-2 text-gray-200 hover:bg-gray-700"
                 >Profile</router-link
               >
@@ -173,7 +177,10 @@ onMounted(fetchProfile);
       class="absolute top-16 left-0 w-full bg-gray-900 text-white p-4 shadow-lg md:hidden"
     >
       <button
-        @click="isMobileMenuOpen = false; showModal = true"
+        @click="
+          isMobileMenuOpen = false;
+          showModal = true;
+        "
         class="block w-full text-center py-2 mb-2 bg-gradient-to-r from-purple-500 via-blue-500 to-pink-500 rounded-lg"
       >
         Join Class
@@ -201,25 +208,25 @@ onMounted(fetchProfile);
 
   <!-- Modal -->
   <modal
-      v-if="showModal"
-      :isVisible="showModal"
-      title="Join Class"
-      @close="showModal = false"
-      @confirm="joinClass"
-    >
-      <template #body>
-        <input
-          v-model="classCode"
-          placeholder="Enter class code"
-          class="input-field"
-        />
-        <input
-          v-model="studentEmail"
-          placeholder="Enter your gmail"
-          class="input-field"
-        />
-      </template>
-   </modal>
+    v-if="showModal"
+    :isVisible="showModal"
+    title="Join Class"
+    @close="showModal = false"
+    @confirm="joinClass"
+  >
+    <template #body>
+      <input
+        v-model="classCode"
+        placeholder="Enter class code"
+        class="input-field"
+      />
+      <input
+        v-model="studentEmail"
+        placeholder="Enter your gmail"
+        class="input-field"
+      />
+    </template>
+  </modal>
 </template>
 
 <style>

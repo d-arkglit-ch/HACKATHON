@@ -15,6 +15,7 @@ const SubmissionSchema = new mongoose.Schema({
   ]
 }, { timestamps: true });
 
-export default mongoose.model("Submission", SubmissionSchema);
+const Submission = mongoose.models.Submission || mongoose.model('Submission', SubmissionSchema);
+export default Submission;
 
 

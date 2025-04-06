@@ -7,36 +7,36 @@ import { fileURLToPath } from "url";  // ✅ Required for __dirname in ES Module
 
 const router = express.Router();
 
-// ✅ Models
-const Class = mongoose.model(
-  "Class",
-  new mongoose.Schema({
-    name: String,
-    code: { type: String, unique: true },
-  })
-);
+// // ✅ Models
+// const Class = mongoose.model(
+//   "Class",
+//   new mongoose.Schema({
+//     name: String,
+//     code: { type: String, unique: true },
+//   })
+// );
 
-const Assignment = mongoose.model(
-  "Assignment",
-  new mongoose.Schema({
-    classId: String,
-    title: String,
-    description: String,
-    fileUrl: String,
-    dueDate: Date,
-  })
-);
+// const Assignment = mongoose.model(
+//   "Assignment",
+//   new mongoose.Schema({
+//     classId: String,
+//     title: String,
+//     description: String,
+//     fileUrl: String,
+//     dueDate: Date,
+//   })
+// );
 
-const Submission = mongoose.model(
-  "Submission",
-  new mongoose.Schema({
-    assignmentId: String,
-    studentName: String,
-    fileUrl: String,
-    feedback: String,
-    grade: String,
-  })
-);
+// const Submission = mongoose.model(
+//   "Submission",
+//   new mongoose.Schema({
+//     assignmentId: String,
+//     studentName: String,
+//     fileUrl: String,
+//     feedback: String,
+//     grade: String,
+//   })
+// );
 
 // ✅ Create a New Class
 router.post("/classes", async (req, res) => {
