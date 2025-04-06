@@ -1,5 +1,5 @@
 <script setup>
-import AppNavbar from '@/components/AppNavbar.vue'; // Import Navbar
+import AppNavbar from '@/components/AppNavbar.vue';
 </script>
 
 <template>
@@ -9,10 +9,14 @@ import AppNavbar from '@/components/AppNavbar.vue'; // Import Navbar
       <h1 class="text-4xl font-bold text-center mb-6 text-blue-400">All Classes</h1>
 
       <!-- Create & Refresh Section -->
-      <div class="flex flex-col md:flex-row justify-between mb-6 gap-4">
+      <div class="flex flex-col gap-4 mb-6">
         <input v-model="newClassName" type="text" placeholder="Enter class name..." class="input-field" />
-        <button @click="createClass" class="btn btn-primary">+ Create Class</button>
-        <button @click="refreshClasses" class="btn btn-success">🔄 Refresh</button>
+        <input v-model="department" type="text" placeholder="Enter department..." class="input-field" />
+        <input v-model="subject" type="text" placeholder="Enter subject..." class="input-field" />
+        <div class="flex flex-col md:flex-row gap-4">
+          <button @click="createClass" class="btn btn-primary">+ Create Class</button>
+          <button @click="refreshClasses" class="btn btn-success">🔄 Refresh</button>
+        </div>
       </div>
 
       <!-- Class List -->
@@ -27,6 +31,7 @@ import AppNavbar from '@/components/AppNavbar.vue'; // Import Navbar
               {{ classItem.name }}
             </router-link>
             <p class="text-sm text-gray-400">Code: <span class="text-blue-400 font-semibold">{{ classItem.code }}</span></p>
+            <p class="text-sm text-gray-400">Dept: {{ classItem.department || 'N/A' }} | Subject: {{ classItem.subject || 'N/A' }}</p>
           </div>
           <div class="flex items-center space-x-4">
             <button @click="copyClassCode(classItem.code)" class="btn btn-warning">📋 Copy Code</button>
@@ -44,9 +49,11 @@ import api from '../api';
 
 export default {
   data() {
-    return { 
+    return {
       classes: [],
-      newClassName: ''
+      newClassName: '',
+      department: '',
+      subject: ''
     };
   },
   async created() {
@@ -68,15 +75,18 @@ export default {
       }
 
       try {
-        const response = await api.post('/classes', { name: this.newClassName });
+        const response = await api.post('/classes', {
+          name: this.newClassName,
+          department: this.department,
+          subject: this.subject
+        });
 
-        // Push the newly created class into the list
         this.classes.push(response.data);
 
-        // Reset input field
         this.newClassName = "";
+        this.department = "";
+        this.subject = "";
 
-        // Redirect to the assignments page of the newly created class
         this.$router.push(`/assignments/${response.data._id}`);
 
         alert("✅ Class created successfully!");
@@ -139,7 +149,6 @@ export default {
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.15);
 }
 
-/* Button Hover & Active Effects */
 .btn:hover {
   transform: translateY(-2px);
   box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.2);
@@ -150,42 +159,31 @@ export default {
   box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.2);
 }
 
-/* Primary Button */
 .btn-primary {
   background: linear-gradient(to right, #4f46e5, #6d28d9);
   color: white;
 }
-
 .btn-primary:hover {
   background: linear-gradient(to right, #4338ca, #5b21b6);
 }
-
-/* Success Button */
 .btn-success {
   background: linear-gradient(to right, #059669, #065f46);
   color: white;
 }
-
 .btn-success:hover {
   background: linear-gradient(to right, #047857, #064e3b);
 }
-
-/* Warning Button */
 .btn-warning {
   background: linear-gradient(to right, #d97706, #b45309);
   color: white;
 }
-
 .btn-warning:hover {
   background: linear-gradient(to right, #c2410c, #9a3412);
 }
-
-/* Danger Button */
 .btn-danger {
   background: linear-gradient(to right, #dc2626, #b91c1c);
   color: white;
 }
-
 .btn-danger:hover {
   background: linear-gradient(to right, #b91c1c, #991b1b);
 }
