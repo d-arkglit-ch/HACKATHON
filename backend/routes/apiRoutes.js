@@ -112,6 +112,13 @@ router.post("/assignments", upload.single("file"), async (req, res) => {
     });
 
     await newAssignment.save();
+    await Class.findByIdAndUpdate(
+      classId,
+      { $push: { assignments: newAssignment._id } },
+      { new: true }
+    );
+
+    
     res.status(201).json({ message: "Assignment created successfully", assignment: newAssignment });
   } catch (error) {
     console.error("Error creating assignment:", error);
