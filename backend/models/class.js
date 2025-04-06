@@ -10,10 +10,5 @@ const ClassSchema = new mongoose.Schema({
   assignments: [{ type: mongoose.Schema.Types.ObjectId, ref: "Assignment" }]
 });
 
-<<<<<<< HEAD
 const Class = mongoose.models.Class || mongoose.model('Class', ClassSchema);
 export default Class;
-=======
-// ✅ Prevent OverwriteModelError
-export default mongoose.models.Class || mongoose.model("Class", ClassSchema);
->>>>>>> c4b88e2157735ee558c348907e1355d35714a700

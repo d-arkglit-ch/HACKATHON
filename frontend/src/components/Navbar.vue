@@ -4,11 +4,6 @@ import axios from "axios";
 import { useRouter } from "vue-router";
 import modal from "./modal.vue";
 import { RouterLink } from "vue-router";
-<<<<<<< HEAD
-=======
-
->>>>>>> c4b88e2157735ee558c348907e1355d35714a700
-
 const user =ref(null);
 const router = useRouter();
 //PROFILE 

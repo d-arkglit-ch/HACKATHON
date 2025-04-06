@@ -15,15 +15,7 @@ const UserSchema = new mongoose.Schema({
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Class" }], 
     default: undefined // Only stored for teachers
   }
-<<<<<<< HEAD
-},
-{ timestamps: true 
-}
-);
-
-=======
 }, { timestamps: true });
 
 // ✅ Prevent OverwriteModelError
->>>>>>> c4b88e2157735ee558c348907e1355d35714a700
 export default mongoose.models.User || mongoose.model("User", UserSchema);

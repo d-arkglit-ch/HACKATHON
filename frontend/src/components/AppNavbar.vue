@@ -11,6 +11,7 @@ import { RouterLink } from 'vue-router';
       <RouterLink to="/class-list" class="nav-link" active-class="active-link">Class List</RouterLink>
       <RouterLink to="/upload-assignment/1" class="nav-link" active-class="active-link">Upload Assignment</RouterLink>
       <RouterLink to="/submissions/1" class="nav-link" active-class="active-link">Submissions</RouterLink>
+      <RouterLink to="/profile" class="nav-link" active-class="active-link">Profile</RouterLink>
     </div>
   </nav>
 </template>
