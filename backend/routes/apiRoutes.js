@@ -36,24 +36,9 @@ const upload = multer({ storage: multer.memoryStorage() }); // PDF stored in mem
 
 // ✅ Create a New Class
 // ✅ Create a New Class (Updated with subject & semester)
-router.post("/classes", async (req, res) => {
-  try {
-    const { name, subject, semester } = req.body;
 
-    const newClass = new Class({
-      name,
-      subject,
-      semester,
-      code: uuidv4()
-    });
 
-    await newClass.save();
-    res.status(201).json(newClass);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
+   
 
 // ✅ Get All Classes
 router.get("/classes", async (req, res) => {
@@ -207,6 +192,30 @@ router.post("/upload", upload.single("file"), (req, res) => {
   if (!req.file) return res.status(400).json({ error: "No file uploaded" });
   const fileUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
   res.json({ fileUrl });
+});
+// ✅ Create a New Class (with department & subject)
+router.post("/classes", async (req, res) => {
+  try {
+    const { name, department, subject, semester, teacherId } = req.body;
+
+    if (!name || !department || !subject) {
+      return res.status(400).json({ error: "Name, department, and subject are required" });
+    }
+
+    const newClass = new Class({
+      name,
+      department,
+      subject,
+      semester,
+      teacherId,
+      code: uuidv4()
+    });
+
+    await newClass.save();
+    res.status(201).json(newClass);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // ✅ Serve Static Files

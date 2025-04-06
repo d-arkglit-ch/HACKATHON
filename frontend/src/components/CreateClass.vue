@@ -1,5 +1,5 @@
 <script setup>
-import AppNavbar from '@/components/AppNavbar.vue'; // Import Navbar
+import AppNavbar from '@/components/AppNavbar.vue';
 </script>
 
 <template>
@@ -8,10 +8,16 @@ import AppNavbar from '@/components/AppNavbar.vue'; // Import Navbar
     <div class="w-full max-w-3xl bg-gray-800 p-8 rounded-lg shadow-xl">
       <h1 class="text-4xl font-bold text-center mb-6 text-blue-400">All Classes</h1>
 
-      <!-- Create & Refresh Section -->
-      <div class="flex flex-col md:flex-row justify-between mb-6 gap-4">
-        <input v-model="newClassName" type="text" placeholder="Enter class name..." class="input-field" />
-        <button @click="createClass" class="btn btn-primary">+ Create Class</button>
+      <!-- Form -->
+      <div class="grid md:grid-cols-4 gap-4 mb-6">
+        <input v-model="newClass.name" placeholder="Class name" class="input-field" />
+        <input v-model="newClass.department" placeholder="Department" class="input-field" />
+        <input v-model="newClass.subject" placeholder="Subject" class="input-field" />
+        <button @click="createClass" class="btn btn-primary">+ Create</button>
+      </div>
+
+      <!-- Refresh Button -->
+      <div class="mb-4 text-right">
         <button @click="refreshClasses" class="btn btn-success">🔄 Refresh</button>
       </div>
 
@@ -26,7 +32,8 @@ import AppNavbar from '@/components/AppNavbar.vue'; // Import Navbar
             <router-link :to="'/assignments/' + classItem._id" class="text-white font-semibold text-lg hover:underline capitalize text-xl">
               {{ classItem.name }}
             </router-link>
-            <p class="text-sm text-gray-400">Code: <span class="text-blue-400 font-semibold">{{ classItem.code }}</span></p>
+            <p class="text-sm text-gray-400">Code: <span class="text-blue-400">{{ classItem.code }}</span></p>
+            <p class="text-sm text-gray-400">Dept: {{ classItem.department }} | Subject: {{ classItem.subject }}</p>
           </div>
           <div class="flex items-center space-x-4">
             <button @click="copyClassCode(classItem.code)" class="btn btn-warning">📋 Copy Code</button>
@@ -44,9 +51,13 @@ import api from '../api';
 
 export default {
   data() {
-    return { 
+    return {
       classes: [],
-      newClassName: ''
+      newClass: {
+        name: '',
+        department: '',
+        subject: ''
+      }
     };
   },
   async created() {
@@ -62,43 +73,36 @@ export default {
       }
     },
     async createClass() {
-      if (!this.newClassName.trim()) {
-        alert("❌ Class name cannot be empty!");
+      const { name, department, subject } = this.newClass;
+      if (!name || !department || !subject) {
+        alert("❌ Fill in all fields!");
         return;
       }
 
       try {
-        const response = await api.post('/classes', { name: this.newClassName });
-
-        // Push the newly created class into the list
+        const response = await api.post('/classes', this.newClass);
         this.classes.push(response.data);
-
-        // Reset input field
-        this.newClassName = "";
-
-        // Redirect to the assignments page of the newly created class
+        this.newClass = { name: '', department: '', subject: '' };
         this.$router.push(`/assignments/${response.data._id}`);
-
-        alert("✅ Class created successfully!");
+        alert("✅ Class created!");
       } catch (error) {
         console.error('❌ Error creating class:', error);
         alert('❌ Failed to create class.');
       }
     },
-    async deleteClass(classId) {
-      if (!confirm('Are you sure you want to delete this class?')) return;
+    async deleteClass(id) {
+      if (!confirm('Delete this class?')) return;
       try {
-        await api.delete(`/classes/${classId}`);
-        this.classes = this.classes.filter(cls => cls._id !== classId);
-        alert('✅ Class deleted successfully!');
+        await api.delete(`/classes/${id}`);
+        this.classes = this.classes.filter(c => c._id !== id);
+        alert('✅ Class deleted!');
       } catch (error) {
         console.error('❌ Error deleting class:', error);
-        alert('❌ Failed to delete class.');
       }
     },
     copyClassCode(code) {
       navigator.clipboard.writeText(code);
-      alert('✅ Class code copied to clipboard!');
+      alert('✅ Code copied!');
     },
     async refreshClasses() {
       await this.fetchClasses();
@@ -108,7 +112,6 @@ export default {
 </script>
 
 <style scoped>
-/* Input Field */
 .input-field {
   padding: 0.75rem;
   border-radius: 10px;
@@ -116,77 +119,41 @@ export default {
   color: white;
   border: 1px solid #4a5568;
   outline: none;
-  transition: border-color 0.3s ease;
 }
 
-.input-field:focus {
-  border-color: #63b3ed;
-  box-shadow: 0px 0px 8px rgba(99, 179, 237, 0.7);
-}
-
-/* Button Base */
 .btn {
   padding: 0.75rem 1.5rem;
   font-size: 1rem;
   font-weight: bold;
   border-radius: 12px;
-  transition: all 0.3s ease-in-out;
-  text-align: center;
   display: inline-flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   min-width: 120px;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
 }
 
-/* Button Hover & Active Effects */
 .btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.2);
 }
 
-.btn:active {
-  transform: translateY(0px);
-  box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.2);
-}
-
-/* Primary Button */
 .btn-primary {
   background: linear-gradient(to right, #4f46e5, #6d28d9);
   color: white;
 }
 
-.btn-primary:hover {
-  background: linear-gradient(to right, #4338ca, #5b21b6);
-}
-
-/* Success Button */
 .btn-success {
   background: linear-gradient(to right, #059669, #065f46);
   color: white;
 }
 
-.btn-success:hover {
-  background: linear-gradient(to right, #047857, #064e3b);
-}
-
-/* Warning Button */
 .btn-warning {
   background: linear-gradient(to right, #d97706, #b45309);
   color: white;
 }
 
-.btn-warning:hover {
-  background: linear-gradient(to right, #c2410c, #9a3412);
-}
-
-/* Danger Button */
 .btn-danger {
   background: linear-gradient(to right, #dc2626, #b91c1c);
   color: white;
-}
-
-.btn-danger:hover {
-  background: linear-gradient(to right, #b91c1c, #991b1b);
 }
 </style>
