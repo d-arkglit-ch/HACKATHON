@@ -19,18 +19,20 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // ✅ Ensure uploads directory exists
 const uploadPath = path.join(__dirname, "../uploads");
-if (!fs.existsSync(uploadPath)) fs.mkdirSync(uploadPath);
+// if (!fs.existsSync(uploadPath)) fs.mkdirSync(uploadPath);
 
-// ✅ Configure Multer Storage
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadPath);
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + "-" + file.originalname);
-  },
-});
-const upload = multer({ storage });
+// // ✅ Configure Multer Storage
+// const storage = multer.diskStorage({
+//   destination: (req, file, cb) => {
+//     cb(null, uploadPath);
+//   },
+//   filename: (req, file, cb) => {
+//     cb(null, Date.now() + "-" + file.originalname);
+//   },
+// });
+// const upload = multer({ storage });
+const upload = multer({ storage: multer.memoryStorage() }); // PDF stored in memory as Buffer
+
 
 // ✅ Create a New Class
 // ✅ Create a New Class (Updated with subject & semester)
@@ -75,16 +77,50 @@ router.delete("/classes/:id", async (req, res) => {
 });
 
 // ✅ Create a New Assignment
-router.post("/assignments", async (req, res) => {
+// router.post("/assignments", async (req, res) => {
+//   try {
+//     const { classId, title, description, fileUrl, dueDate, teacherId } = req.body;
+//     console.log(fileUrl);
+//     const newAssignment = new Assignment({ classId, title, description, fileUrl, dueDate, teacherId });
+//     console.log(newAssignment);
+//     await newAssignment.save();
+//     console.log("ok3");
+//     res.status(201).json(newAssignment);
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// });
+
+router.post("/assignments", upload.single("file"), async (req, res) => {
   try {
-    const { classId, title, description, fileUrl, dueDate, teacherId } = req.body;
-    const newAssignment = new Assignment({ classId, title, description, fileUrl, dueDate, teacherId });
+    const { title, description, dueDate, classId, teacherId } = req.body;
+
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    const newAssignment = new Assignment({
+      title,
+      description,
+      dueDate,
+      classId,
+      teacherId,
+      fileData: {
+        data: req.file.buffer,
+        contentType: req.file.mimetype, // should be 'application/pdf'
+      },
+    });
+
     await newAssignment.save();
-    res.status(201).json(newAssignment);
+    res.status(201).json({ message: "Assignment created successfully", assignment: newAssignment });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Error creating assignment:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
+
+
 });
+
 
 // ✅ Get Assignments for a Specific Class
 router.get("/assignments/:classId", async (req, res) => {
