@@ -1,5 +1,6 @@
 <script setup>
 import { defineProps } from "vue";
+import axios from "axios";
 
 const props = defineProps({
   title: {
@@ -23,6 +24,7 @@ const props = defineProps({
     <h1 class="text-4xl font-bold mb-2">
       {{ props.title }}
     </h1>
+    
     <div class="w-full max-w-3xl">
       <h2 class="text-xl font-semibold mb-4">How to Join</h2>
       <ul class="space-y-4">

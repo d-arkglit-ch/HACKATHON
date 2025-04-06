@@ -1,9 +1,9 @@
 <script setup>
-import { ref  ,onMounted } from "vue";
+import { ref, onMounted } from "vue";
+import axios from "axios";
+import { useRouter } from "vue-router";
 import modal from "./modal.vue";
 import { RouterLink } from "vue-router";
-import { useRouter } from "vue-router";
-import axios from 'axios';
 
 const user =ref(null);
 const router = useRouter();
@@ -46,6 +46,7 @@ const isDropdownOpen = ref(false);
 const isMobileMenuOpen = ref(false);
 const showModal = ref(false);
 const classCode = ref("");
+const studentEmail = ref(""); 
 const joinedClasses = ref([]);
 
 
@@ -59,8 +60,30 @@ const toggleMobileMenu = () => {
 
 
 
-const joinClass = () => {
-  alert("Joining class...");
+const joinClass = async () => {
+  if (!classCode.value.trim()) {
+    alert("Please enter a class code.");
+    return;
+  }
+
+  try {
+    const response = await axios.post("http://localhost:5000/class/join-class", {
+      classCode: classCode.value,
+      studentEmail: studentEmail.value,
+    });
+
+    if (response.data) {
+      alert("Class joined successfully!");
+      joinedClasses.value.push(response.data.classData);
+      console.log(joinedClasses.value);
+      showModal.value = false; // Close modal after joining
+
+      router.push({ name: 'JoinedSubjects' });
+    }
+  } catch (error) {
+    console.log(error);
+   alert(error.response?.data?.message || "Error joining class.");
+  }
 };
 
 onMounted(fetchProfile);
@@ -188,6 +211,11 @@ onMounted(fetchProfile);
           placeholder="Enter class code"
           class="input-field"
         />
+        <input
+          v-model="studentEmail"
+          placeholder="Enter your gmail"
+          class="input-field"
+        />
       </template>
    </modal>
 </template>
@@ -198,7 +226,8 @@ onMounted(fetchProfile);
 .neon-text {
   font-family: "Orbitron", sans-serif;
   background: linear-gradient(90deg, #ff00ff, #00ffff, #ff9900);
-  -webkit-background-clip: text;
+  background-clip: text; /* Standard */
+  -webkit-background-clip: text; /* Webkit for Safari/Chrome */
   -webkit-text-fill-color: transparent;
   text-shadow: 0 0 5px rgba(255, 0, 255, 0.8), 0 0 10px rgba(0, 255, 255, 0.8),
     0 0 20px rgba(255, 153, 0, 0.8), 0 0 40px rgba(255, 0, 255, 0.5);

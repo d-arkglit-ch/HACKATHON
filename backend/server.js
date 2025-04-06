@@ -10,6 +10,7 @@ import { fileURLToPath } from "url";
 import "./config/auth.js"; // ✅ Import Google OAuth setup
 import authRoutes from "./routes/authRoutes.js";
 import apiRoutes from "./routes/apiRoutes.js";
+import classRoutes from "./routes/classRoutes.js";
 
 dotenv.config();
 const app = express();
@@ -50,6 +51,10 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
+// Student route
+app.use("/class", classRoutes);
+
+// Authorization Routes
 // ✅ Serve uploaded files statically
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 

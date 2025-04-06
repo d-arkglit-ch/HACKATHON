@@ -12,7 +12,9 @@ import LandingView from '@/views/LandingPage.vue';
 import AddDetail from '@/views/AddDetail.vue';
 import TeacherDashboard from '../views/teacher-dashboard.vue';
 import StudentDashboard from '../views/Student-dashboard.vue';
-import  profile from '../views/Profile.vue';
+import JoinedSubjectsView from '../views/JoinedSubjectsView.vue';
+import profile from '../views/Profile.vue';
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -28,8 +30,8 @@ const router = createRouter({
     { path: '/additional-details', name: 'signup', component: AddDetail },
     { path: '/student-dashboard', component: StudentDashboard, name: 'student-dashboard' },
     { path: '/teacher-dashboard', component: TeacherDashboard, name: 'teacher-dashboard' },
-    { path: "/profile", component: profile },
-
+    { path: '/joined-subjects', name: 'JoinedSubjects', component: JoinedSubjectsView},
+    { path: '/profile', component: profile},
   ]
 });
 
