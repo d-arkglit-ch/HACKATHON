@@ -50,6 +50,29 @@ router.post("/set-role", async (req, res) => {
         res.status(500).json({ error: "Failed to update role" });
     }
 });
+// In authRoutes.js
+router.get("/check-auth", async (req, res) => {
+    if (req.isAuthenticated()) {
+        try {
+            // Populate classesJoined to match /google/callback logic
+            const populatedUser = await User.findById(req.user._id).populate("classesJoined");
+            return res.json({
+                isAuthenticated: true,
+                user: {
+                    username: populatedUser.username,
+                    email: populatedUser.email,
+                    role: populatedUser.role,
+                    googleId: populatedUser.googleId,
+                    classesJoined: populatedUser.classesJoined, // Populated array
+                },
+            });
+        } catch (error) {
+            console.error("❌ Error in check-auth:", error);
+            return res.status(500).json({ error: "Failed to fetch user data" });
+        }
+    }
+    return res.json({ isAuthenticated: false });
+});
 
 // Google OAuth Callback
 router.get(
