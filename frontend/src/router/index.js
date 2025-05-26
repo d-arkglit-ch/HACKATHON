@@ -13,7 +13,7 @@ import AddDetail from '@/views/AddDetail.vue';
 import TeacherDashboard from '../views/teacher-dashboard.vue';
 import StudentDashboard from '../views/Student-dashboard.vue';
 import JoinedSubjectsView from '../views/JoinedSubjectsView.vue';
-import AssignmentsByClass from '@/views/AssignmentsByClass.vue';
+import AssignmentsByClass from '@/components/AssignmentsByClass.vue';
 import profile from '../views/Profile.vue';
 
 const router = createRouter({
@@ -32,11 +32,9 @@ const router = createRouter({
     { path: '/student-dashboard', component: StudentDashboard, name: 'student-dashboard' },
     { path: '/teacher-dashboard', component: TeacherDashboard, name: 'teacher-dashboard' },
     { path: '/joined-subjects', name: 'JoinedSubjects', component: JoinedSubjectsView},
-    { path: "/joined-subjects/assignments/:classId", name: "AssignmentsByClass", component: AssignmentsByClass, props: true},
+    { path: '/joined-subjects/assignments/:id', name: 'AssignmentsByClass', component: AssignmentsByClass},
     { path: '/profile', component: profile},
   ]
 });
-
-
 
 export default router;

@@ -9,7 +9,7 @@ onMounted(async () => {
   if (email) {
     try {
       const response = await axios.get(
-        `http://localhost:5000/class/joined-classes/${email}`
+        `http://localhost:5001/class/joined-classes/${email}`
       );
       subjects.value = response.data; // Store and use this in your template
       console.log(subjects.value);
@@ -33,7 +33,7 @@ const getImageForSubject = (subjectName) => {
     return "https://1.bp.blogspot.com/-46jbckEga8g/XaZ9iQ4KxTI/AAAAAAAAAHg/p1DE7ZSQ214U4dlDynfqB38gagRR9t3egCLcBGAsYHQ/w1200-h630-p-k-no-nu/new1.png";
   return "https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8Y29kaW5nfGVufDB8fDB8fHww";
 };
-</script>
+</script> 
 
 <template>
   <div class="p-6 pt-20 min-h-screen bg-black text-white">
