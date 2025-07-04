@@ -1,178 +1,150 @@
 <script setup>
-import AppNavbar from '@/components/AppNavbar.vue'; // Import Navbar
+import AppNavbar from '@/components/AppNavbar.vue';
+import { ref, onMounted } from 'vue';
+import api from '../api';
+
+const classes = ref([]);
+const selectedClass = ref('');
+const assignments = ref([]);
+const selectedAssignment = ref('');
+const submissions = ref([]);
+const loading = ref(false);
+
+const fetchClasses = async () => {
+  try {
+    const res = await api.get('/classes');
+    classes.value = res.data;
+  } catch (err) {
+    console.error('❌ Error fetching classes:', err);
+  }
+};
+
+const fetchAssignments = async () => {
+  try {
+    const res = await api.get(`/assignments/${selectedClass.value}`);
+    if (Array.isArray(res.data)) {
+      assignments.value = res.data;
+    } else if (res.data?.newAssignments) {
+      assignments.value = [...res.data.newAssignments, ...res.data.oldAssignments];
+    } else {
+      assignments.value = [];
+    }
+  } catch (err) {
+    console.error('❌ Error fetching assignments:', err);
+  }
+};
+
+const fetchSubmissions = async () => {
+  try {
+    loading.value = true;
+    const res = await api.get(`/submissions/${selectedAssignment.value}`);
+    submissions.value = res.data.map((sub) => ({
+      ...sub,
+      feedbackText: '',
+      fileUrl: `${import.meta.env.VITE_BACKEND_URL}/submissions/${sub._id}/file`,
+    }));
+  } catch (err) {
+    console.error('❌ Error fetching submissions:', err);
+  } finally {
+    loading.value = false;
+  }
+};
+
+const openPDF = (url) => {
+  if (!url) return alert("❌ No file found for this submission");
+  window.open(url, '_blank');
+};
+
+const submitFeedback = async (submissionId, feedbackText, index) => {
+  try {
+    const res = await api.post(`/submissions/${submissionId}/feedback`, {
+      feedbackText,
+      teacherId: 'replace_with_teacher_id',
+    });
+    submissions.value[index].reviewed = true;
+    alert('✅ Feedback submitted');
+  } catch (err) {
+    console.error('❌ Error submitting feedback:', err);
+    alert('❌ Failed to submit feedback');
+  }
+};
+
+onMounted(() => {
+  fetchClasses();
+});
 </script>
 
 <template>
-  <AppNavbar/>
-  <div class="min-h-screen bg-gray-900 text-gray-300 flex items-center justify-center p-6">
-    <div class="w-full max-w-2xl bg-gray-800 p-8 rounded-lg shadow-lg">
-      <h1 class="text-3xl font-bold text-center mb-6 text-blue-400">Assignment Submissions</h1>
+  <AppNavbar />
 
-      <!-- Class Selection -->
-      <div class="mb-6">
-        <label class="text-gray-300">Select Class:</label>
-        <select v-model="selectedClass" @change="fetchAssignments" class="input-field w-full">
+  <div class="min-h-screen bg-gray-900 text-white p-6">
+    <div class="max-w-3xl mx-auto bg-gray-800 p-6 rounded-lg shadow-lg">
+      <h1 class="text-3xl font-bold mb-6 text-blue-400 text-center">Assignment Submissions</h1>
+
+      <div class="mb-4">
+        <label>Select Class:</label>
+        <select v-model="selectedClass" @change="fetchAssignments" class="w-full p-2 rounded">
+          <option disabled value="">-- Choose Class --</option>
           <option v-for="cls in classes" :key="cls._id" :value="cls._id">{{ cls.name }}</option>
         </select>
       </div>
 
-      <!-- Assignment Selection -->
-      <div v-if="selectedClass" class="mb-6">
-        <label class="text-gray-300">Select Assignment:</label>
-        <select v-model="selectedAssignment" @change="fetchSubmissions" class="input-field w-full">
-          <option v-for="assignment in assignments" :key="assignment._id" :value="assignment._id">{{ assignment.title }}</option>
+      <div class="mb-4" v-if="selectedClass">
+        <label>Select Assignment:</label>
+        <select v-model="selectedAssignment" @change="fetchSubmissions" class="w-full p-2 rounded">
+          <option disabled value="">-- Choose Assignment --</option>
+          <option v-for="a in assignments || []" :key="a._id" :value="a._id">{{ a.title }}</option>
         </select>
       </div>
 
-      <h2 v-if="selectedAssignment" class="text-xl font-semibold mb-4 text-gray-300">Previous Submissions</h2>
-      
-      <!-- Loading State -->
       <div v-if="loading" class="text-center text-gray-400">Loading submissions...</div>
-      
-      <!-- Submissions List -->
-      <ul v-else-if="submissions.length" class="space-y-4">
-        <li 
-          v-for="submission in submissions" 
-          :key="submission._id" 
-          class="bg-gray-700 p-4 rounded-lg shadow-md hover:bg-gray-600 transition"
+
+      <ul v-else-if="submissions.length" class="space-y-6">
+        <li
+          v-for="(sub, index) in submissions"
+          :key="sub._id"
+          class="bg-gray-700 p-4 rounded shadow hover:bg-gray-600 transition"
         >
-          <div>
-            <strong class="text-white">{{ submission.studentName }}</strong>  
-            <a :href="submission.fileUrl" target="_blank" class="text-blue-400 hover:underline ml-2">
-              📄 View Submission
-            </a>
+          <div class="flex justify-between items-center mb-2">
+            <span class="font-semibold">📄 View Assignment</span>
+            <button
+              @click="openPDF(sub.fileUrl)"
+              class="text-blue-400 underline hover:text-blue-300"
+            >Open</button>
           </div>
 
-          <div class="flex items-center space-x-3">
-            <button @click="giveSelfFeedback(submission)" class="btn btn-primary">📝 Self Feedback</button>
-            <button @click="giveAIFeedback(submission)" class="btn btn-secondary">🤖 AI Feedback</button>
-            <span v-if="submission.reviewed" class="badge-reviewed">✔ Reviewed</span>
+          <div class="mb-2">
+            <span v-if="sub.reviewed" class="text-green-400 font-semibold">✔ Reviewed</span>
+            <span v-else class="text-yellow-300">⏳ Pending</span>
+          </div>
+
+          <div class="mt-2">
+            <textarea
+              v-model="sub.feedbackText"
+              class="w-full p-2 rounded bg-gray-600 text-white"
+              placeholder="Write feedback..."
+              rows="2"
+            ></textarea>
+            <button
+              @click="submitFeedback(sub._id, sub.feedbackText, index)"
+              class="mt-2 bg-green-500 px-4 py-2 rounded hover:bg-green-600"
+            >Submit Feedback</button>
           </div>
         </li>
       </ul>
-      
-      <!-- No Submissions Message -->
+
       <p v-else class="text-center text-gray-400">No submissions found for this assignment.</p>
     </div>
   </div>
 </template>
 
-<script>
-import api from '../api';
-
-export default {
-  data() {
-    return { 
-      classes: [],
-      selectedClass: '',
-      assignments: [],
-      selectedAssignment: '',
-      submissions: [],
-      loading: false
-    };
-  },
-  async created() {
-    await this.fetchClasses();
-  },
-  methods: {
-    async fetchClasses() {
-      try {
-        const response = await api.get('/classes');
-        this.classes = response.data;
-      } catch (error) {
-        console.error('❌ Error fetching classes:', error);
-      }
-    },
-    async fetchAssignments() {
-      if (!this.selectedClass) return;
-      try {
-        const response = await api.get(`/assignments/${this.selectedClass}`);
-        this.assignments = response.data;
-      } catch (error) {
-        console.error('❌ Error fetching assignments:', error);
-      }
-    },
-    async fetchSubmissions() {
-      if (!this.selectedAssignment) return;
-      this.loading = true;
-      try {
-        const response = await api.get(`/submissions/${this.selectedAssignment}`);
-        this.submissions = response.data;
-      } catch (error) {
-        console.error('❌ Error fetching submissions:', error);
-        alert('Failed to load submissions. Please try again.');
-      } finally {
-        this.loading = false;
-      }
-    },
-    giveSelfFeedback(submission) {
-      const feedback = prompt("Enter your feedback:", submission.feedback || "");
-      if (feedback !== null) {
-        this.submitFeedback(submission._id, feedback);
-      }
-    },
-    async giveAIFeedback(submission) {
-      try {
-        const response = await api.post(`/ai-feedback/${submission._id}`);
-        this.submitFeedback(submission._id, response.data.feedback);
-      } catch (error) {
-        console.error('❌ Error generating AI feedback:', error);
-        alert('AI feedback generation failed. Try again later.');
-      }
-    },
-    async submitFeedback(submissionId, feedback) {
-      try {
-        await api.put(`/submissions/feedback/${submissionId}`, { feedback });
-        this.submissions = this.submissions.map(sub => 
-          sub._id === submissionId ? { ...sub, feedback, reviewed: true } : sub
-        );
-        alert('✅ Feedback submitted successfully!');
-      } catch (error) {
-        console.error('❌ Error submitting feedback:', error);
-        alert('Failed to submit feedback. Please try again.');
-      }
-    }
-  }
-};
-</script>
-
 <style scoped>
-/* Buttons */
-.btn {
-  padding: 8px 12px;
-  font-size: 0.9rem;
-  font-weight: bold;
-  border-radius: 6px;
-  transition: all 0.3s ease-in-out;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 140px;
-  text-align: center;
-}
-
-.btn-primary {
-  background: linear-gradient(to right, #3b82f6, #1e3a8a);
+select {
+  background-color: #1f2937;
   color: white;
+  border: 1px solid #4b5563;
 }
-
-.btn-secondary {
-  background: linear-gradient(to right, #9333ea, #5b21b6);
-  color: white;
-}
-
-.btn-primary:hover, .btn-secondary:hover {
-  transform: scale(1.05);
-}
-
-/* Reviewed Badge */
-.badge-reviewed {
-  background-color: #16a34a;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-weight: bold;
-  color: white;
-  text-transform: uppercase;
-  font-size: 0.85rem;
+option {
+  background-color: #1f2937;
 }
 </style>

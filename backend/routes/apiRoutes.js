@@ -1,4 +1,5 @@
 // 📁 routes/api.js
+// routes/apiRoutes.js
 import express from "express";
 import { v4 as uuidv4 } from "uuid";
 import mongoose from "mongoose";
@@ -7,40 +8,31 @@ import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
 
-// ✅ Import models from separate files
+// ✅ Import models
 import Assignment from "../models/assignments.js";
 import Class from "../models/class.js";
 import Submission from "../models/submission.js";
 
 const router = express.Router();
-
-// ✅ Get __dirname in ES module
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-// ✅ Ensure uploads directory exists
 const uploadPath = path.join(__dirname, "../uploads");
-// if (!fs.existsSync(uploadPath)) fs.mkdirSync(uploadPath);
+const upload = multer({ storage: multer.memoryStorage() });
 
-// // ✅ Configure Multer Storage
-// const storage = multer.diskStorage({
-//   destination: (req, file, cb) => {
-//     cb(null, uploadPath);
-//   },
-//   filename: (req, file, cb) => {
-//     cb(null, Date.now() + "-" + file.originalname);
-//   },
-// });
-// const upload = multer({ storage });
-const upload = multer({ storage: multer.memoryStorage() }); // PDF stored in memory as Buffer
+// -------------------- Class Routes --------------------
+router.post("/classes", async (req, res) => {
+  try {
+    const { name, department, subject, semester, teacherId } = req.body;
+    if (!name || !department || !subject) {
+      return res.status(400).json({ error: "Name, department, and subject are required" });
+    }
+    const newClass = new Class({ name, department, subject, semester, teacherId, code: uuidv4() });
+    await newClass.save();
+    res.status(201).json(newClass);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
-
-// ✅ Create a New Class
-// ✅ Create a New Class (Updated with subject & semester)
-
-
-   
-
-// ✅ Get All Classes
 router.get("/classes", async (req, res) => {
   try {
     const classes = await Class.find();
@@ -50,7 +42,6 @@ router.get("/classes", async (req, res) => {
   }
 });
 
-// ✅ Delete a Class
 router.delete("/classes/:id", async (req, res) => {
   try {
     const deletedClass = await Class.findByIdAndDelete(req.params.id);
@@ -61,28 +52,11 @@ router.delete("/classes/:id", async (req, res) => {
   }
 });
 
-// ✅ Create a New Assignment
-// router.post("/assignments", async (req, res) => {
-//   try {
-//     const { classId, title, description, fileUrl, dueDate, teacherId } = req.body;
-//     console.log(fileUrl);
-//     const newAssignment = new Assignment({ classId, title, description, fileUrl, dueDate, teacherId });
-//     console.log(newAssignment);
-//     await newAssignment.save();
-//     console.log("ok3");
-//     res.status(201).json(newAssignment);
-//   } catch (error) {
-//     res.status(500).json({ error: error.message });
-//   }
-// });
-
+// -------------------- Assignment Routes --------------------
 router.post("/assignments", upload.single("file"), async (req, res) => {
   try {
     const { title, description, dueDate, classId, teacherId } = req.body;
-
-    if (!req.file) {
-      return res.status(400).json({ error: "No file uploaded" });
-    }
+    if (!req.file) return res.status(400).json({ error: "No file uploaded" });
 
     const newAssignment = new Assignment({
       title,
@@ -90,31 +64,18 @@ router.post("/assignments", upload.single("file"), async (req, res) => {
       dueDate,
       classId,
       teacherId,
-      fileData: {
-        data: req.file.buffer,
-        contentType: req.file.mimetype, // should be 'application/pdf'
-      },
+      fileData: { data: req.file.buffer, contentType: req.file.mimetype },
     });
 
     await newAssignment.save();
-    await Class.findByIdAndUpdate(
-      classId,
-      { $push: { assignments: newAssignment._id } },
-      { new: true }
-    );
+    await Class.findByIdAndUpdate(classId, { $push: { assignments: newAssignment._id } }, { new: true });
 
-    
     res.status(201).json({ message: "Assignment created successfully", assignment: newAssignment });
   } catch (error) {
-    console.error("Error creating assignment:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
-
-
 });
 
-
-// ✅ Get Assignments for a Specific Class
 router.get("/assignments/:classId", async (req, res) => {
   try {
     const classId = req.params.classId;
@@ -125,17 +86,12 @@ router.get("/assignments/:classId", async (req, res) => {
     const recentAssignments = assignments.slice(0, 5);
     const oldAssignments = assignments.slice(5);
 
-    res.json({
-      className: classInfo.name,
-      newAssignments: recentAssignments,
-      oldAssignments: oldAssignments,
-    });
+    res.json({ className: classInfo.name, newAssignments: recentAssignments, oldAssignments });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// ✅ Delete an Assignment
 router.delete("/assignments/:id", async (req, res) => {
   try {
     const deletedAssignment = await Assignment.findByIdAndDelete(req.params.id);
@@ -146,19 +102,27 @@ router.delete("/assignments/:id", async (req, res) => {
   }
 });
 
-// ✅ Submit an Assignment
-router.post("/submissions", async (req, res) => {
+// -------------------- Submission Routes --------------------
+router.post("/submissions", upload.single("file"), async (req, res) => {
   try {
-    const { assignmentId, studentName, fileUrl } = req.body;
-    const newSubmission = new Submission({ assignmentId, studentName, fileUrl });
-    await newSubmission.save();
-    res.status(201).json(newSubmission);
+    const { assignmentId, studentId, content } = req.body;
+    const submission = new Submission({
+      assignmentId,
+      studentId,
+      content,
+      file: req.file ? {
+        data: req.file.buffer,
+        contentType: req.file.mimetype,
+        fileName: req.file.originalname
+      } : undefined,
+    });
+    await submission.save();
+    res.status(201).json(submission);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// ✅ Get Submissions for an Assignment
 router.get("/submissions/:assignmentId", async (req, res) => {
   try {
     const submissions = await Submission.find({ assignmentId: req.params.assignmentId });
@@ -168,14 +132,26 @@ router.get("/submissions/:assignmentId", async (req, res) => {
   }
 });
 
-// ✅ Provide Feedback
+router.get("/submissions/:id/file", async (req, res) => {
+  try {
+    const submission = await Submission.findById(req.params.id);
+    if (!submission || !submission.file || !submission.file.data) {
+      return res.status(404).json({ error: "File not found" });
+    }
+    res.set("Content-Type", submission.file.contentType || "application/pdf");
+    res.set("Content-Disposition", `inline; filename=\"${submission.file.fileName || 'submission.pdf'}\"`);
+    res.send(submission.file.data);
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 router.post("/submissions/:submissionId/feedback", async (req, res) => {
   try {
-    const { feedback, grade } = req.body;
+    const { feedbackText, score, teacherId } = req.body;
     const submission = await Submission.findById(req.params.submissionId);
     if (!submission) return res.status(404).json({ error: "Submission not found" });
-    submission.feedback = feedback;
-    submission.grade = grade;
+    submission.feedbacks.push({ feedbackText, score, teacherId });
     await submission.save();
     res.json(submission);
   } catch (error) {
@@ -183,7 +159,6 @@ router.post("/submissions/:submissionId/feedback", async (req, res) => {
   }
 });
 
-// ✅ Delete Submission
 router.delete("/submissions/:id", async (req, res) => {
   try {
     const deletedSubmission = await Submission.findByIdAndDelete(req.params.id);
@@ -194,38 +169,7 @@ router.delete("/submissions/:id", async (req, res) => {
   }
 });
 
-// ✅ Upload Endpoint
-router.post("/upload", upload.single("file"), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: "No file uploaded" });
-  const fileUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
-  res.json({ fileUrl });
-});
-// ✅ Create a New Class (with department & subject)
-router.post("/classes", async (req, res) => {
-  try {
-    const { name, department, subject, semester, teacherId } = req.body;
-
-    if (!name || !department || !subject) {
-      return res.status(400).json({ error: "Name, department, and subject are required" });
-    }
-
-    const newClass = new Class({
-      name,
-      department,
-      subject,
-      semester,
-      teacherId,
-      code: uuidv4()
-    });
-
-    await newClass.save();
-    res.status(201).json(newClass);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// ✅ Serve Static Files
+// -------------------- Static File Serving --------------------
 router.use("/uploads", express.static(uploadPath));
 
 export default router;

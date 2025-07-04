@@ -13,7 +13,10 @@ import "./config/auth.js"; // Google OAuth setup
 import authRoutes from "./routes/authRoutes.js";
 import apiRoutes from "./routes/apiRoutes.js";
 import classRoutes from "./routes/classRoutes.js";
-import uploadRoutes from "./routes/uploadRoutes.js"; // 👈 Upload route
+import uploadRoutes from "./routes/uploadRoutes.js"; // File upload route
+import submissionRoutes from "./routes/submissionRoutes.js"; // ✅ New Submissions route
+import assignmentRoutes from "./routes/assignmentRoutes.js";
+
 
 dotenv.config();
 const app = express();
@@ -46,18 +49,18 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: false, // HTTPS only if true
+      secure: false, // Only set to true if using HTTPS
       httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000, // 1 day
     },
   })
 );
 
-// ✅ Passport (for Google OAuth)
+// ✅ Passport (Google OAuth)
 app.use(passport.initialize());
 app.use(passport.session());
 
-// ✅ Static Uploads: PDFs, etc.
+// ✅ Static Uploads - serve files like PDFs
 const uploadsPath = path.join(__dirname, "uploads");
 app.use(
   "/uploads",
@@ -70,11 +73,13 @@ app.use(
   })
 );
 
-// ✅ Routes
+// ✅ Route Mounts
 app.use("/auth", authRoutes);
 app.use("/api", apiRoutes);
 app.use("/class", classRoutes);
-app.use("/upload", uploadRoutes); // 👈 File upload route
+app.use("/upload", uploadRoutes);
+app.use("/submissions", submissionRoutes); // ✅ Important
+app.use("/assignments", assignmentRoutes);
 
 // ✅ Health check
 app.get("/", (req, res) => res.send("🚀 Backend is running!"));
