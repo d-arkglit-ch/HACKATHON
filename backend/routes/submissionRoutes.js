@@ -8,6 +8,7 @@ const router = express.Router();
 
 // ✅ Get all submissions for an assignment
 router.get("/:assignmentId", async (req, res) => {
+  console.log("Fetching submissions for assignment:", req.params.assignmentId);
   try {
     const { assignmentId } = req.params;
 
@@ -21,6 +22,7 @@ router.get("/:assignmentId", async (req, res) => {
       reviewed: sub.feedbacks.length > 0,
       fileUrl: `/submissions/${sub._id}/file`
     }));
+console.log(fileUrl);
 
     res.json(formatted);
   } catch (err) {
@@ -31,6 +33,7 @@ router.get("/:assignmentId", async (req, res) => {
 
 // ✅ Serve the uploaded file
 router.get("/:id/file", async (req, res) => {
+  console.log("Serving file for submission ID:", req.params.id);
   try {
     const submission = await Submission.findById(req.params.id);
     if (!submission || !submission.file?.data) {

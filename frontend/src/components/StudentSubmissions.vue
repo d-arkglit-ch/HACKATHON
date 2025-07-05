@@ -33,11 +33,15 @@ const fetchAssignments = async () => {
     console.error('❌ Error fetching assignments:', err);
   }
 };
-
+ 
 const fetchSubmissions = async () => {
+  console.log('Fetching submissions for assignment:', selectedAssignment.value);
+  
   try {
     loading.value = true;
+    console.log("Step1");
     const res = await api.get(`/submissions/${selectedAssignment.value}`);
+    console.log("step2" , res.data);
     submissions.value = res.data.map((sub) => ({
       ...sub,
       feedbackText: '',
@@ -46,11 +50,15 @@ const fetchSubmissions = async () => {
   } catch (err) {
     console.error('❌ Error fetching submissions:', err);
   } finally {
+    console.log("step3");
+    console.log("Submissions fetched:", submissions.value);
     loading.value = false;
   }
 };
 
 const openPDF = (url) => {
+  console.log("VITE_BACKEND_URL:", import.meta.env.VITE_BACKEND_URL);
+  console.log("Opening PDF with URL:", url);
   if (!url) return alert("❌ No file found for this submission");
   window.open(url, '_blank');
 };
