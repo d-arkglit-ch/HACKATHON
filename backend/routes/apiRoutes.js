@@ -7,11 +7,13 @@ import multer from "multer";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
-
+import { requireAuth } from "../config/auth.js"; // ✅ Import auth middleware
 // ✅ Import models
 import Assignment from "../models/assignments.js";
 import Class from "../models/class.js";
 import Submission from "../models/submission.js";
+import { analyzePdfWithAzure } from "../utils/azureVision.js";
+import { getGeminiFeedback } from "../utils/gemeniApi.js";
 
 const router = express.Router();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -122,11 +124,57 @@ router.post("/submissions", upload.single("file"), async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+router.post("/submissions/:id/analyze", async (req, res) => {
+  try {
+    console.log("🧠 Starting analysis for submission:", req.params.id);
+
+    const submission = await Submission.findById(req.params.id).populate("assignmentId");
+    const buffer = submission.assignmentId.fileData?.data;
+
+    if (!buffer) throw new Error("No PDF buffer found");
+
+    console.log("📤 Sending to Azure OCR...");
+    const ocrText = await analyzePdfWithAzure(buffer);
+    console.log("📄 Extracted text from PDF:", ocrText);
+    console.log("🔗 Generating public URL...");
+    const pdfUrl = `http://localhost:5001/api/assignments/${submission.assignmentId._id}/file`;
+
+    console.log("🤖 Calling Gemini...");
+const feedback = await getGeminiFeedback(ocrText, pdfUrl);
+
+if (!feedback) {
+  console.error("⚠️ No feedback received from Gemini. Returning fallback response.");
+  return res.status(500).json({ error: "AI feedback generation failed." });
+}
+
+console.log("📩 Final feedback:", feedback);
+submission.feedback = feedback.summary;
+submission.marks = feedback.marks;
+
+await submission.save();
+
+res.json({
+  message: "Feedback generated",
+  summary: feedback.summary,
+  marks: feedback.marks,
+});
+
+   } catch (err) {
+    console.error("❌ AI analysis error:", err);
+    res.status(500).json({ error: "Failed to analyze submission" });
+  }
+});
 
 router.get("/submissions/:assignmentId", async (req, res) => {
   try {
-    const submissions = await Submission.find({ assignmentId: req.params.assignmentId });
-    res.json(submissions);
+    const submissions = await Submission.find({ assignmentId: req.params.assignmentId })
+      .populate("studentId", "name email");
+    res.json(submissions.map(sub => ({
+      _id: sub._id,
+      studentName: sub.studentId?.name || "Unknown",
+      reviewed: sub.feedbacks?.length > 0,
+      fileUrl: `/api/submissions/${sub._id}/file`
+    })));
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -146,9 +194,14 @@ router.get("/submissions/:id/file", async (req, res) => {
   }
 });
 
-router.post("/submissions/:submissionId/feedback", async (req, res) => {
+router.post("/submissions/:submissionId/feedback", requireAuth, async (req, res) => {
   try {
-    const { feedbackText, score, teacherId } = req.body;
+    console.log("Received feedback for submission:");
+    const { feedbackText, score } = req.body;
+
+    const teacherId = req.user._id; // Assuming user ID is set in req.user by auth middleware
+console.log(teacherId)
+    console.log("Received feedback:", { feedbackText, score , teacherId });
     const submission = await Submission.findById(req.params.submissionId);
     if (!submission) return res.status(404).json({ error: "Submission not found" });
     submission.feedbacks.push({ feedbackText, score, teacherId });

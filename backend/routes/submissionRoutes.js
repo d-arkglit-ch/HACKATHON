@@ -22,7 +22,7 @@ router.get("/:assignmentId", async (req, res) => {
       reviewed: sub.feedbacks.length > 0,
       fileUrl: `/submissions/${sub._id}/file`
     }));
-console.log(fileUrl);
+console.log("Formatted submission data:", formatted);
 
     res.json(formatted);
   } catch (err) {
@@ -75,5 +75,6 @@ router.post("/:id/feedback", async (req, res) => {
     res.status(500).json({ error: "Failed to submit feedback" });
   }
 });
+
 
 export default router;

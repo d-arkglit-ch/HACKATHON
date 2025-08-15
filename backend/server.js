@@ -20,6 +20,13 @@ import assignmentRoutes from "./routes/assignmentRoutes.js";
 
 dotenv.config();
 const app = express();
+app.use((req, res, next) => {
+  res.setTimeout(120000, () => { // 120 seconds
+    console.log("⏳ Request timed out");
+    res.status(408).send("Request Timeout");
+  });
+  next();
+});
 
 // ✅ Resolve __dirname in ES Module
 const __filename = fileURLToPath(import.meta.url);
@@ -78,7 +85,7 @@ app.use("/auth", authRoutes);
 app.use("/api", apiRoutes);
 app.use("/class", classRoutes);
 app.use("/upload", uploadRoutes);
-app.use("/submissions", submissionRoutes); // ✅ Important
+// app.use("/submissions", submissionRoutes); // ✅ Important
 app.use("/assignments", assignmentRoutes);
 
 // ✅ Health check

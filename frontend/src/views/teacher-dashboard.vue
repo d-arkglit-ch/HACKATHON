@@ -1,5 +1,8 @@
 <script setup>
 import AppNavbar from '@/components/AppNavbar.vue'; // Import Navbar
+
+
+
 </script>
 
 <template>

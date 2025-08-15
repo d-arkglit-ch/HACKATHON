@@ -64,5 +64,13 @@ passport.deserializeUser(async (id, done) => {
     done(error, null);
   }
 });
+export const requireAuth = (req, res, next) => {
+  if (req.isAuthenticated()) {
+    console.log("✅ User is authenticated:", req.user);
+    return next();
+  }
+  return res.status(401).json({ error: 'Not authenticated' });
+};
+
 
 export default passport;

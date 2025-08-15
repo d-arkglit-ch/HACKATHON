@@ -16,7 +16,18 @@ const SubmissionSchema = new mongoose.Schema({
       feedbackText: { type: String, required: true },
       score: { type: Number, min: 0, max: 100 }
     }
-  ]
+  ],
+    aiReview: {
+    summary: String,            // Gemini-generated feedback
+    marks: Number,              // Auto-evaluated score
+    rawExtractedText: String    // Extracted OCR text from Azure Vision
+  },
+  verifiedReview: {
+  teacherId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  finalFeedback: String,
+  finalMarks: Number,
+  verifiedAt: { type: Date }
+}
 }, { timestamps: true }); 
 
 const Submission = mongoose.models.Submission || mongoose.model('Submission', SubmissionSchema);

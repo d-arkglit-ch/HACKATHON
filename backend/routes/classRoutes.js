@@ -112,23 +112,27 @@ router.get("/:classId", async (req, res) => {
 router.post("/submit-assignment", upload.single("pdf"), async (req, res) => {
   try {
     const { studentEmail, assignmentId } = req.body;
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
     const student = await User.findOne({ email: studentEmail, role: "Student" });
-
     if (!student) {
       return res.status(404).json({ message: "Student not found" });
     }
-
     const submission = new Submission({
       studentId: student._id,
       assignmentId,
-      file: req.file.buffer,
+      file: {
+        data: req.file.buffer,
+        contentType: req.file.mimetype,
+        fileName: req.file.originalname
+      }
     });
-
     await submission.save();
-    res.status(201).json({ message: "Assignment submitted successfully." });
+    res.status(201).json({ message: "Assignment submitted successfully.", submission });
   } catch (err) {
     console.error("Error submitting assignment:", err);
-    res.status(500).json({ message: "Failed to submit assignment." });
+    res.status(500).json({ message: "Failed to submit assignment.", error: err.message });
   }
 });
 

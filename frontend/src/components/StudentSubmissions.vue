@@ -1,7 +1,9 @@
 <script setup>
 import AppNavbar from '@/components/AppNavbar.vue';
 import { ref, onMounted } from 'vue';
-import api from '../api';
+import api from '@/api';
+
+
 
 const classes = ref([]);
 const selectedClass = ref('');
@@ -18,6 +20,27 @@ const fetchClasses = async () => {
     console.error('❌ Error fetching classes:', err);
   }
 };
+
+
+const analyzingSubmissionId = ref(null);
+
+const analyzeSubmission = async (submissionId, index) => {
+  try {
+    analyzingSubmissionId.value = submissionId;
+    const res = await api.post(`/submissions/${submissionId}/analyze`,null,{timeout:60000});
+    const summary = res.data?.summary || '⚠ No AI summary returned';
+     const marks = res.data?.marks || '⚠ No marks returned';
+    submissions.value[index].feedbackText = summary;
+    submissions.value[index].marks = marks;
+    alert('✅ AI analysis complete. You can now edit the feedback.');
+  } catch (err) {
+    console.error('❌ Error analyzing submission:', err);
+    alert('❌ Failed to analyze with AI');
+  } finally {
+    analyzingSubmissionId.value = null;
+  }
+};
+
 
 const fetchAssignments = async () => {
   try {
@@ -36,26 +59,27 @@ const fetchAssignments = async () => {
  
 const fetchSubmissions = async () => {
   console.log('Fetching submissions for assignment:', selectedAssignment.value);
-  
   try {
     loading.value = true;
     console.log("Step1");
     const res = await api.get(`/submissions/${selectedAssignment.value}`);
-    console.log("step2" , res.data);
+    console.log("step2", res.data);
     submissions.value = res.data.map((sub) => ({
-      ...sub,
-      feedbackText: '',
-      fileUrl: `${import.meta.env.VITE_BACKEND_URL}/submissions/${sub._id}/file`,
+      _id: sub._id,
+      studentName: sub.studentId ? 'Unknown' : 'Unknown', // Adjust based on studentId population
+      reviewed: sub.feedbacks?.length > 0,
+      fileUrl: `${import.meta.env.VITE_BACKEND_URL}/api/submissions/${sub._id}/file`,
+      feedbackText: ''
     }));
   } catch (err) {
     console.error('❌ Error fetching submissions:', err);
+    submissions.value = [];
   } finally {
     console.log("step3");
     console.log("Submissions fetched:", submissions.value);
     loading.value = false;
   }
 };
-
 const openPDF = (url) => {
   console.log("VITE_BACKEND_URL:", import.meta.env.VITE_BACKEND_URL);
   console.log("Opening PDF with URL:", url);
@@ -63,11 +87,14 @@ const openPDF = (url) => {
   window.open(url, '_blank');
 };
 
-const submitFeedback = async (submissionId, feedbackText, index) => {
-  try {
+const submitFeedback = async (submissionId, feedbackText,marks , index) => {
+    try {
+ 
+
     const res = await api.post(`/submissions/${submissionId}/feedback`, {
       feedbackText,
-      teacherId: 'replace_with_teacher_id',
+      score: marks,
+      
     });
     submissions.value[index].reviewed = true;
     alert('✅ Feedback submitted');
@@ -126,18 +153,30 @@ onMounted(() => {
             <span v-else class="text-yellow-300">⏳ Pending</span>
           </div>
 
-          <div class="mt-2">
-            <textarea
-              v-model="sub.feedbackText"
-              class="w-full p-2 rounded bg-gray-600 text-white"
-              placeholder="Write feedback..."
-              rows="2"
-            ></textarea>
-            <button
-              @click="submitFeedback(sub._id, sub.feedbackText, index)"
-              class="mt-2 bg-green-500 px-4 py-2 rounded hover:bg-green-600"
-            >Submit Feedback</button>
-          </div>
+       <div class="mt-3">
+  <button
+    class="btn btn-secondary bg-blue-500 px-3 py-1 rounded hover:bg-blue-600 text-white"
+    @click="analyzeSubmission(sub._id, index)"
+    :disabled="analyzingSubmissionId === sub._id"
+  >
+    <span v-if="analyzingSubmissionId === sub._id">⏳ Analyzing...</span>
+    <span v-else>🤖 Analyze with AI</span>
+  </button>
+</div>
+
+<div class="mt-2">
+  <textarea
+    v-model="sub.feedbackText"
+    class="w-full p-2 rounded bg-gray-600 text-white mt-2"
+    placeholder="Write feedback..."
+    rows="2"
+  ></textarea>
+  <div v-if="sub.marks" class="text-sm text-gray-400 mt-1">Marks: {{ sub.marks }}</div>
+  <button
+    @click="submitFeedback(sub._id, sub.feedbackText, sub.marks, index)"
+    class="mt-2 bg-green-500 px-4 py-2 rounded hover:bg-green-600"
+  >Submit Feedback</button>
+</div>
         </li>
       </ul>
 
