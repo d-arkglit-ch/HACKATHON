@@ -1,1 +1,1 @@
-# HACKATHON
+# AI Powered Classroom
